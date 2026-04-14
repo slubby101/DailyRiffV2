@@ -1,0 +1,285 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# afk-ralph.sh -- Run RALPH in autonomous loop until all sub-issues are closed or max iterations.
+# Usage: ./ralph/afk-ralph.sh <prd-issue-number> [max-iterations]
+#
+# Runs inside a Docker sandbox for isolation.
+
+PRD_ISSUE="${1:?Usage: afk-ralph.sh <prd-issue-number> [max-iterations]}"
+MAX_ITERATIONS="${2:-20}"
+REPO="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+PRD_TITLE="$(gh issue view "$PRD_ISSUE" --repo "$REPO" --json title --jq '.title')"
+
+# Detect default branch dynamically. Falls back to the current branch if the
+# remote default is empty (fresh repo with nothing pushed yet). This makes the
+# script work on both `main` and `master` defaults without hard-coding.
+DEFAULT_BRANCH="$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name // ""')"
+if [[ -z "$DEFAULT_BRANCH" ]]; then
+  DEFAULT_BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo master)"
+  echo "Warning: remote has no default branch set; using '${DEFAULT_BRANCH}' as PR base."
+fi
+
+cd "$REPO_ROOT"
+
+# Inject credentials into the Docker sandbox.
+# - Claude OAuth: reads ~/.claude/.credentials.json directly (cross-platform;
+#   works on Windows + Linux, and on macOS if the file has been exported from Keychain).
+#   The previous macOS-only `security find-generic-password` call has been removed.
+# - GitHub CLI: gh auth token -> GH_TOKEN env var
+inject_sandbox_credentials() {
+  local creds_file="${HOME}/.claude/.credentials.json"
+  local gh_token
+
+  # Claude OAuth
+  if [[ -f "$creds_file" ]]; then
+    # shellcheck disable=SC2002
+    cat "$creds_file" | docker sandbox exec -i "$SANDBOX_NAME" bash -c \
+      'mkdir -p /home/agent/.claude && cat > /home/agent/.claude/.credentials.json' 2>/dev/null \
+      && echo "Injected Claude OAuth credentials into sandbox (${creds_file})"
+  else
+    echo "Warning: ${creds_file} not found; sandbox will not have Claude credentials."
+  fi
+
+  # GitHub CLI
+  gh_token=$(gh auth token 2>/dev/null) || true
+  if [[ -n "$gh_token" ]]; then
+    docker sandbox exec "$SANDBOX_NAME" bash -c \
+      "grep -q GH_TOKEN /etc/sandbox-persistent.sh 2>/dev/null || echo 'export GH_TOKEN=${gh_token}' >> /etc/sandbox-persistent.sh" 2>/dev/null
+    echo "Injected GitHub token into sandbox"
+  fi
+}
+
+SANDBOX_NAME="claude-$(basename "$REPO_ROOT")"
+# Custom template built for DailyRiff: ubuntu 25.10 + node 22 + pnpm 9 + uv + supabase CLI.
+# Built via: `docker sandbox save` after installing tools into a base `claude` sandbox.
+# If the template doesn't exist on this machine, fall back to the stock `claude` template.
+SANDBOX_TEMPLATE="dailyriff-dev:v1"
+if ! docker image inspect "$SANDBOX_TEMPLATE" >/dev/null 2>&1; then
+  echo "Warning: template '${SANDBOX_TEMPLATE}' not found; falling back to stock 'claude' template."
+  echo "         Rebuild with ralph/build-sandbox-template.sh for faster iterations."
+  SANDBOX_TEMPLATE="claude"
+fi
+
+echo "Starting AFK RALPH: PRD #${PRD_ISSUE}, $MAX_ITERATIONS max iterations"
+echo "Sandbox template: ${SANDBOX_TEMPLATE}"
+echo ""
+
+# --- Host-side Supabase orchestration ---
+# Running `supabase start` inside a docker-in-docker sandbox fails with "path not shared"
+# because supabase CLI uses bind mounts that the host daemon can't resolve from sandbox paths.
+# Workaround: start supabase on the HOST before the loop, and inject host-routable connection
+# URLs into the sandbox via env vars. The sandbox reaches the host via `host.docker.internal`.
+if command -v supabase >/dev/null 2>&1 && [[ -f supabase/config.toml ]]; then
+  if ! supabase status >/dev/null 2>&1; then
+    echo "Starting host-side supabase..."
+    supabase start 2>&1 | tail -5
+  else
+    echo "Host-side supabase already running."
+  fi
+  # Capture the JWT secret and pass sandbox-routable URLs into the sandbox env.
+  SUPABASE_JWT_SECRET_HOST="$(supabase status -o env 2>/dev/null | awk -F= '/^JWT_SECRET=/ {print $2}' | tr -d '"')"
+  SUPABASE_ANON_KEY_HOST="$(supabase status -o env 2>/dev/null | awk -F= '/^ANON_KEY=/ {print $2}' | tr -d '"')"
+  SUPABASE_SERVICE_ROLE_HOST="$(supabase status -o env 2>/dev/null | awk -F= '/^SERVICE_ROLE_KEY=/ {print $2}' | tr -d '"')"
+  export SANDBOX_DATABASE_URL="postgresql://postgres:postgres@host.docker.internal:54322/postgres"
+  export SANDBOX_SUPABASE_URL="http://host.docker.internal:54321"
+  export SANDBOX_SUPABASE_JWT_SECRET="${SUPABASE_JWT_SECRET_HOST}"
+  export SANDBOX_SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY_HOST}"
+  export SANDBOX_SUPABASE_SERVICE_ROLE="${SUPABASE_SERVICE_ROLE_HOST}"
+fi
+
+# Ensure sandbox exists and has OAuth credentials before the loop
+if ! docker sandbox ls 2>/dev/null | awk 'NR>1 {print $1}' | grep -q "^${SANDBOX_NAME}$"; then
+  echo "Creating sandbox '${SANDBOX_NAME}' from template '${SANDBOX_TEMPLATE}'..."
+  if [[ "$SANDBOX_TEMPLATE" == "claude" ]]; then
+    docker sandbox create --name "$SANDBOX_NAME" claude "$REPO_ROOT"
+  else
+    docker sandbox create --name "$SANDBOX_NAME" --load-local-template -t "$SANDBOX_TEMPLATE" "$REPO_ROOT"
+  fi
+fi
+inject_sandbox_credentials
+
+# Inject Supabase env vars into sandbox so tests can reach the host supabase.
+if [[ -n "${SANDBOX_DATABASE_URL:-}" ]]; then
+  docker sandbox exec "$SANDBOX_NAME" bash -c "cat >> /etc/sandbox-persistent.sh <<ENVEOF
+export DATABASE_URL='${SANDBOX_DATABASE_URL}'
+export SUPABASE_URL='${SANDBOX_SUPABASE_URL}'
+export SUPABASE_JWT_SECRET='${SANDBOX_SUPABASE_JWT_SECRET}'
+export SUPABASE_ANON_KEY='${SANDBOX_SUPABASE_ANON_KEY}'
+export SUPABASE_SERVICE_ROLE='${SANDBOX_SUPABASE_SERVICE_ROLE}'
+ENVEOF" 2>/dev/null && echo "Injected host supabase env into sandbox."
+fi
+
+# Create feature branch for this PRD
+BRANCH="ralph/prd-${PRD_ISSUE}"
+if git show-ref --verify --quiet "refs/heads/${BRANCH}"; then
+  git branch -D "$BRANCH"
+fi
+git checkout -b "$BRANCH"
+echo "Created branch: ${BRANCH}"
+echo ""
+
+# On exit: push branch and create PR (or draft PR on failure)
+cleanup() {
+  local exit_code=$?
+  local current_branch
+  current_branch=$(git branch --show-current)
+
+  if [[ "$current_branch" != "$BRANCH" ]]; then
+    exit "$exit_code"
+  fi
+
+  local commits_ahead
+  commits_ahead=$(git rev-list --count "${DEFAULT_BRANCH}..${BRANCH}" 2>/dev/null || echo "0")
+
+  if [[ "$commits_ahead" -gt 0 ]]; then
+    echo ""
+    echo "Pushing branch ${BRANCH} (${commits_ahead} commit(s))..."
+    git push --force-with-lease --set-upstream origin "$BRANCH"
+
+    # Check if a PR already exists for this branch
+    existing_pr=$(gh pr view "$BRANCH" --repo "$REPO" --json number --jq '.number' 2>/dev/null || echo "")
+
+    if [[ -n "$existing_pr" ]]; then
+      echo "PR #${existing_pr} already exists for branch ${BRANCH}."
+    elif [[ "$exit_code" -eq 0 ]]; then
+      echo "Creating pull request..."
+      gh pr create \
+        --repo "$REPO" \
+        --base "$DEFAULT_BRANCH" \
+        --head "$BRANCH" \
+        --title "$PRD_TITLE" \
+        --body "$(cat <<EOF
+Implements PRD #${PRD_ISSUE}.
+
+## PRD
+Closes #${PRD_ISSUE}
+EOF
+)"
+    else
+      echo "Creating draft pull request (incomplete — max iterations reached)..."
+      gh pr create \
+        --repo "$REPO" \
+        --base "$DEFAULT_BRANCH" \
+        --head "$BRANCH" \
+        --title "[WIP] $PRD_TITLE" \
+        --draft \
+        --body "$(cat <<EOF
+Partial implementation of PRD #${PRD_ISSUE} (max iterations reached).
+
+## PRD
+References #${PRD_ISSUE}
+EOF
+)"
+    fi
+  else
+    echo "No new commits on ${BRANCH}. Skipping push and PR."
+  fi
+
+  echo "Switching back to ${DEFAULT_BRANCH}..."
+  git checkout "$DEFAULT_BRANCH"
+  exit "$exit_code"
+}
+trap cleanup EXIT
+
+for ((i=1; i<=MAX_ITERATIONS; i++)); do
+  echo "=== RALPH iteration $i / $MAX_ITERATIONS ==="
+
+  # Re-fetch issue state each iteration to get current open/closed status
+  echo "Fetching PRD issue #${PRD_ISSUE}..."
+  prd_body=$(gh issue view "$PRD_ISSUE" --repo "$REPO" --json number,title,state,body \
+    --jq '"# PRD: \(.title) (#\(.number))\nState: \(.state)\n\n\(.body)"')
+
+  echo "Finding sub-issues..."
+  sub_issue_numbers=$(gh search issues --repo "$REPO" "Parent PRD #${PRD_ISSUE}" \
+    --json number --jq '.[].number' | grep -v "^${PRD_ISSUE}$" | sort -n)
+
+  if [[ -z "$sub_issue_numbers" ]]; then
+    echo "No sub-issues found. Nothing to do."
+    exit 1
+  fi
+
+  # Check if all sub-issues are closed before fetching details
+  open_count=0
+  for num in $sub_issue_numbers; do
+    state=$(gh issue view "$num" --repo "$REPO" --json state --jq '.state')
+    if [[ "$state" == "OPEN" ]]; then
+      open_count=$((open_count + 1))
+    fi
+  done
+
+  if [[ "$open_count" -eq 0 ]]; then
+    echo "=== RALPH: All sub-issues closed after $((i - 1)) iterations ==="
+    exit 0
+  fi
+
+  echo "$open_count open sub-issue(s) remaining."
+
+  # Ensure OAuth credentials are available in the sandbox
+  inject_sandbox_credentials
+
+  # Fetch each sub-issue's full details
+  sub_issues=""
+  for num in $sub_issue_numbers; do
+    detail=$(gh issue view "$num" --repo "$REPO" --json number,title,state,body \
+      --jq '"---\n## Sub-issue #\(.number): \(.title)\nState: \(.state)\n\n\(.body)"')
+    sub_issues="${sub_issues}\n${detail}"
+  done
+
+  # Write the assembled context to a file inside the repo (avoids Windows CLI arg length
+  # limits and keeps the file within claude's allowed working dir). Gitignored via ralph/.gitignore.
+  ctx_file="ralph/.ctx.md"
+  {
+    echo "${prd_body}"
+    echo ""
+    echo "# Sub-issues"
+    echo -e "${sub_issues}"
+  } > "$ctx_file"
+
+  result=$(docker sandbox run "$SANDBOX_NAME" -- \
+    -p \
+    --permission-mode bypassPermissions \
+    "@ralph/prompt.md
+@${ctx_file}
+
+Read the PRD and sub-issues above. Then:
+1. Identify which sub-issues are OPEN and not blocked by other OPEN issues.
+2. Pick ONE open, unblocked sub-issue to work on (prioritize: architecture > integration > spikes > features > polish).
+3. Implement that sub-issue. Keep the change small and focused.
+4. Detect and run the project's test suite (check package.json, pyproject.toml, Makefile, Cargo.toml, CLAUDE.md, etc.). Fix any failures.
+5. Make a git commit with a descriptive message.
+6. Close the sub-issue: gh issue close <number> --repo ${REPO} --comment \"Completed in \$(git rev-parse --short HEAD). <brief summary of what was done>\"
+7. If ALL sub-issues are now closed, output <promise>COMPLETE</promise>.
+ONLY WORK ON A SINGLE SUB-ISSUE PER ITERATION.")
+
+  echo "$result"
+  echo ""
+
+  if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
+    echo "=== RALPH: All work complete after $i iterations ==="
+    exit 0
+  fi
+
+  # --- Code review gate ---
+  echo "--- Code review for iteration $i ---"
+
+  review_result=$(docker sandbox run "$SANDBOX_NAME" -- \
+    -p \
+    --permission-mode bypassPermissions \
+    "@ralph/review-prompt.md
+
+Review the changes from the most recent commit. Follow the review procedure exactly.")
+
+  echo "$review_result"
+  echo ""
+
+  if [[ "$review_result" == *"<review>FIXES_APPLIED</review>"* ]]; then
+    echo "--- Review: fixes applied, continuing ---"
+  else
+    echo "--- Review: clean, continuing ---"
+  fi
+done
+
+echo "=== RALPH: Reached max iterations ($MAX_ITERATIONS) without completion ==="
+exit 1

@@ -160,14 +160,19 @@ class NotificationService:
             )
             if resp.status_code < 300:
                 return ChannelResult(channel="realtime", success=True)
-        except httpx.HTTPError:
-            pass
+            logger.warning(
+                "Realtime broadcast returned %s: %s",
+                resp.status_code,
+                resp.text[:200],
+            )
+        except httpx.HTTPError as exc:
+            logger.warning("Realtime broadcast failed: %s", exc)
 
         await self._insert_outbox(user_id, payload)
         return ChannelResult(
             channel="realtime",
-            success=True,
-            error="fell back to outbox",
+            success=False,
+            error="broadcast unavailable — queued to outbox",
         )
 
     async def _insert_outbox(

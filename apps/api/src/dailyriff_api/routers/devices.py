@@ -21,7 +21,9 @@ async def list_devices(
         rows = await conn.fetch(
             "SELECT id, user_id, channel, token, keys, user_agent, "
             "created_at, last_used_at "
-            "FROM user_push_subscriptions ORDER BY created_at DESC"
+            "FROM user_push_subscriptions "
+            "WHERE user_id = $1 ORDER BY created_at DESC",
+            user.id,
         )
     return [DeviceResponse(**dict(r)) for r in rows]
 
@@ -62,8 +64,10 @@ async def delete_device(
 ) -> None:
     async with rls_transaction(user.id) as conn:
         result = await conn.execute(
-            "DELETE FROM user_push_subscriptions WHERE id = $1",
+            "DELETE FROM user_push_subscriptions "
+            "WHERE id = $1 AND user_id = $2",
             device_id,
+            user.id,
         )
     if result == "DELETE 0":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

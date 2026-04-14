@@ -52,7 +52,10 @@ jobs:
         working-directory: apps/api
         run: |
           uv run uvicorn dailyriff_api.main:app --host 0.0.0.0 --port 8000 &
-          sleep 3
+          UVICORN_PID=$!
+          trap 'kill $UVICORN_PID 2>/dev/null || true' EXIT
+          curl --retry-connrefused --retry 15 --retry-delay 1 --retry-all-errors \
+            --silent --fail http://localhost:8000/health > /dev/null
           uv run schemathesis run http://localhost:8000/openapi.json --checks all
 
       - name: Check OpenAPI snapshot freshness

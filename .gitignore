@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+out/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Generated API client output (except tracked index stub)
+packages/api-client/src/generated/
+
+# Env files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+
+# Expo
+.expo/

@@ -13,9 +13,6 @@ out/
 coverage/
 .nyc_output/
 
-# Generated API client output (except tracked index stub)
-packages/api-client/src/generated/
-
 # Env files
 .env
 .env.local

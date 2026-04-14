@@ -26,9 +26,29 @@ def _dsn() -> str:
     )
 
 
+async def _register_jsonb_codec(conn: asyncpg.Connection) -> None:
+    """Teach asyncpg to serialize Python dicts/lists <-> jsonb.
+
+    Without this, passing a dict to a jsonb parameter raises
+    `DataError: expected str, got dict` because asyncpg's default jsonb
+    codec expects the caller to pre-serialize to JSON.
+    """
+    await conn.set_type_codec(
+        "jsonb",
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema="pg_catalog",
+    )
+
+
 async def init_pool() -> None:
     global _pool
-    _pool = await asyncpg.create_pool(_dsn(), min_size=2, max_size=10)
+    _pool = await asyncpg.create_pool(
+        _dsn(),
+        min_size=2,
+        max_size=10,
+        init=_register_jsonb_codec,
+    )
 
 
 async def close_pool() -> None:

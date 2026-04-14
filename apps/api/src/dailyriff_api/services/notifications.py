@@ -178,17 +178,17 @@ class NotificationService:
     async def _insert_outbox(
         self, user_id: UUID, payload: NotificationPayload
     ) -> None:
+        # jsonb codec is registered in db.init_pool — pass the dict directly,
+        # not a pre-serialized json.dumps string (would double-encode).
         async with service_transaction() as conn:
             await conn.execute(
                 "INSERT INTO realtime_outbox (user_id, payload) VALUES ($1, $2)",
                 user_id,
-                json.dumps(
-                    {
-                        "title": payload.title,
-                        "body": payload.body,
-                        "data": payload.data,
-                    }
-                ),
+                {
+                    "title": payload.title,
+                    "body": payload.body,
+                    "data": payload.data,
+                },
             )
 
     async def _send_expo(

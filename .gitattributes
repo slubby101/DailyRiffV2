@@ -1,0 +1,8 @@
+# Force LF for files whose byte content is compared by CI (e.g. snapshot
+# freshness checks, codegen diffs). Without this, Windows git autocrlf
+# would commit CRLF and cause CI to see spurious drift against Linux output.
+*.snapshot.json text eol=lf
+packages/api-client/src/** text eol=lf
+
+# Shell scripts must always be LF regardless of host OS.
+*.sh text eol=lf

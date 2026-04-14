@@ -26,9 +26,42 @@ def async_client(seeded_users):
         yield c
 
 
+@pytest.fixture
+def _clean_preferences():
+    """Delete any existing preferences row for USER_A before the test runs.
+
+    Integration tests share a Postgres database across runs, so a prior
+    test (or prior pytest invocation) may have left a row behind. This
+    fixture ensures `test_get_defaults_without_row` actually tests the
+    no-row branch.
+    """
+    import asyncio
+    import asyncpg
+
+    async def _clean():
+        conn = await asyncpg.connect(
+            os.environ.get(
+                "DATABASE_URL",
+                "postgresql://postgres:postgres@localhost:54322/postgres",
+            )
+        )
+        try:
+            await conn.execute(
+                "DELETE FROM notification_preferences WHERE user_id = $1",
+                USER_A_ID,
+            )
+        finally:
+            await conn.close()
+
+    asyncio.run(_clean())
+    yield
+
+
 @_needs_supabase()
 def test_get_defaults_without_row(
-    async_client: TestClient, make_test_jwt: Callable[..., str]
+    async_client: TestClient,
+    make_test_jwt: Callable[..., str],
+    _clean_preferences,
 ) -> None:
     token = make_test_jwt(user_id=USER_A_ID)
     headers = {"Authorization": f"Bearer {token}"}

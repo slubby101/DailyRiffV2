@@ -24,6 +24,7 @@ ALGORITHMS = ["HS256"]
 PROTECTED_RESPONSES: dict[int | str, dict] = {
     400: {"description": "Bad request — invalid input"},
     401: {"description": "Not authenticated"},
+    405: {"description": "Method not allowed"},
     422: {"description": "Validation error"},
 }
 

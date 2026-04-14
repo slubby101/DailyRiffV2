@@ -315,6 +315,9 @@
           "401": {
             "description": "Not authenticated"
           },
+          "405": {
+            "description": "Method not allowed"
+          },
           "422": {
             "description": "Validation error"
           }
@@ -360,6 +363,9 @@
           "401": {
             "description": "Not authenticated"
           },
+          "405": {
+            "description": "Method not allowed"
+          },
           "422": {
             "description": "Validation error"
           }
@@ -402,6 +408,9 @@
           },
           "404": {
             "description": "Device not found"
+          },
+          "405": {
+            "description": "Method not allowed"
           },
           "422": {
             "description": "Validation error"
@@ -456,6 +465,9 @@
           "401": {
             "description": "Not authenticated"
           },
+          "405": {
+            "description": "Method not allowed"
+          },
           "422": {
             "description": "Validation error"
           }
@@ -498,6 +510,9 @@
           },
           "401": {
             "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
           },
           "422": {
             "description": "Validation error"

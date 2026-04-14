@@ -6,14 +6,18 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from dailyriff_api.auth import CurrentUser, get_current_user
+from dailyriff_api.auth import (
+    PROTECTED_RESPONSES,
+    CurrentUser,
+    get_current_user,
+)
 from dailyriff_api.db import rls_transaction
 from dailyriff_api.schemas.device import DeviceRegisterRequest, DeviceResponse
 
 router = APIRouter(prefix="/devices", tags=["devices"])
 
 
-@router.get("", response_model=list[DeviceResponse])
+@router.get("", response_model=list[DeviceResponse], responses=PROTECTED_RESPONSES)
 async def list_devices(
     user: CurrentUser = Depends(get_current_user),
 ) -> list[DeviceResponse]:
@@ -32,6 +36,7 @@ async def list_devices(
     "/register",
     response_model=DeviceResponse,
     status_code=status.HTTP_201_CREATED,
+    responses=PROTECTED_RESPONSES,
 )
 async def register_device(
     body: DeviceRegisterRequest,
@@ -57,7 +62,11 @@ async def register_device(
     return DeviceResponse(**dict(row))
 
 
-@router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{device_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={**PROTECTED_RESPONSES, 404: {"description": "Device not found"}},
+)
 async def delete_device(
     device_id: UUID,
     user: CurrentUser = Depends(get_current_user),

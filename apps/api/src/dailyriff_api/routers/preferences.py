@@ -10,7 +10,11 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
 
-from dailyriff_api.auth import CurrentUser, get_current_user
+from dailyriff_api.auth import (
+    PROTECTED_RESPONSES,
+    CurrentUser,
+    get_current_user,
+)
 from dailyriff_api.db import rls_transaction
 from dailyriff_api.schemas.preferences import (
     PreferencesResponse,
@@ -20,7 +24,7 @@ from dailyriff_api.schemas.preferences import (
 router = APIRouter(prefix="/notification-preferences", tags=["preferences"])
 
 
-@router.get("", response_model=PreferencesResponse)
+@router.get("", response_model=PreferencesResponse, responses=PROTECTED_RESPONSES)
 async def get_preferences(
     user: CurrentUser = Depends(get_current_user),
 ) -> PreferencesResponse:
@@ -36,7 +40,7 @@ async def get_preferences(
     return PreferencesResponse(**dict(row))
 
 
-@router.patch("", response_model=PreferencesResponse)
+@router.patch("", response_model=PreferencesResponse, responses=PROTECTED_RESPONSES)
 async def update_preferences(
     body: PreferencesUpdateRequest,
     user: CurrentUser = Depends(get_current_user),

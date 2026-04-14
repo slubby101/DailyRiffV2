@@ -25,6 +25,9 @@ jobs:
 
       - name: Install Supabase CLI
         run: |
+          # Extract in /tmp — the repo has a `supabase/` directory at root,
+          # so extracting in-place collides with `tar: supabase: File exists`.
+          cd /tmp
           curl -fsSL -o supabase.tar.gz \
             https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz
           tar -xzf supabase.tar.gz

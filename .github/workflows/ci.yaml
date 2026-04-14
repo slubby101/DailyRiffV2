@@ -40,9 +40,15 @@ jobs:
 
       - name: Set Supabase env vars
         run: |
-          echo "SUPABASE_ANON_KEY=$(supabase status -o env | grep ANON_KEY | cut -d= -f2-)" >> "$GITHUB_ENV"
-          echo "SUPABASE_SERVICE_ROLE=$(supabase status -o env | grep SERVICE_ROLE_KEY | cut -d= -f2-)" >> "$GITHUB_ENV"
-          echo "SUPABASE_JWT_SECRET=$(supabase status -o env | grep JWT_SECRET | cut -d= -f2-)" >> "$GITHUB_ENV"
+          # `supabase status -o env` emits KEY="value" with literal quotes.
+          # Strip them via tr -d '"' or the exported vars become `"eyJ..."`
+          # and the Supabase Admin API rejects them with 403 Forbidden.
+          ANON_KEY=$(supabase status -o env | awk -F= '/^ANON_KEY=/ {print $2}' | tr -d '"')
+          SERVICE_ROLE=$(supabase status -o env | awk -F= '/^SERVICE_ROLE_KEY=/ {print $2}' | tr -d '"')
+          JWT_SECRET=$(supabase status -o env | awk -F= '/^JWT_SECRET=/ {print $2}' | tr -d '"')
+          echo "SUPABASE_ANON_KEY=${ANON_KEY}" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE=${SERVICE_ROLE}" >> "$GITHUB_ENV"
+          echo "SUPABASE_JWT_SECRET=${JWT_SECRET}" >> "$GITHUB_ENV"
 
       - name: Install Python dependencies
         working-directory: apps/api

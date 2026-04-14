@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "expo start",
     "build": "echo 'No mobile build in Stage 0'",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "echo 'ESLint config deferred to Stage 1 — see issue #14'",
     "test": "jest --coverage"
   },
   "dependencies": {

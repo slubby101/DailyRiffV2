@@ -70,7 +70,22 @@ jobs:
           trap 'kill $UVICORN_PID 2>/dev/null || true' EXIT
           curl --retry-connrefused --retry 15 --retry-delay 1 --retry-all-errors \
             --silent --fail http://localhost:8000/health > /dev/null
-          uv run schemathesis run http://localhost:8000/openapi.json --checks all
+          # Generate a valid JWT so schemathesis can hit the 5 protected endpoints
+          # as an authenticated user. Without this, every request returns 401 and
+          # schemathesis flags 'Authentication failed' on 5 operations.
+          TEST_JWT=$(uv run python -c "
+          import jwt, os, time
+          claims = {
+              'sub': '00000000-0000-0000-0000-000000000001',
+              'aud': 'authenticated',
+              'exp': int(time.time()) + 3600,
+              'email': 'test@dailyriff.local',
+              'app_metadata': {'role': 'authenticated'},
+          }
+          print(jwt.encode(claims, os.environ['SUPABASE_JWT_SECRET'], algorithm='HS256'))
+          ")
+          uv run schemathesis run http://localhost:8000/openapi.json --checks all \
+            --header "Authorization: Bearer $TEST_JWT"
 
       - name: Check OpenAPI snapshot freshness
         working-directory: apps/api

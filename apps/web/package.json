@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "next build || node scripts/fix-build.js",
+    "build": "next build",
+    "build:onedrive": "next build || node scripts/fix-build.js",
     "start": "next start --port 3000",
     "lint": "next lint",
     "test": "jest --coverage",

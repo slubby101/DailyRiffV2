@@ -1,6 +1,9 @@
-// Workaround for OneDrive EIO errors during next build cleanup.
-// Next.js fails to rmdir .next/export on OneDrive-synced paths.
-// If BUILD_ID exists, the build succeeded — just clean up and generate the missing manifest.
+// OPT-IN workaround for OneDrive EIO errors during `next build` cleanup.
+// Next.js fails to rmdir .next/export on OneDrive-synced paths even when
+// the build itself succeeded. This script is invoked ONLY via the
+// `pnpm --filter web build:onedrive` script — NEVER from the main `build`
+// script and NEVER in CI. CI runs plain `next build` so real failures
+// surface correctly. Do not wire this into the primary build chain.
 const fs = require("fs");
 const path = require("path");
 

@@ -45,6 +45,11 @@ async def update_preferences(
     if not updates:
         return await get_preferences(user=user)
 
+    # SECURITY: column names below are interpolated into SQL via f-string.
+    # Safe because PreferencesUpdateRequest has model_config = ConfigDict(extra="forbid"),
+    # so updates.keys() is constrained to the five declared Pydantic fields. Do NOT
+    # loosen the schema to extra="allow" or add a dict field without refactoring this
+    # builder to a hardcoded column whitelist.
     columns = list(updates.keys())
     values = list(updates.values())
 

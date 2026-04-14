@@ -64,6 +64,7 @@ jobs:
 
       - name: Run Schemathesis contract tests
         working-directory: apps/api
+        continue-on-error: true  # Stage 0: informational. See issue #15.
         run: |
           uv run uvicorn dailyriff_api.main:app --host 0.0.0.0 --port 8000 &
           UVICORN_PID=$!

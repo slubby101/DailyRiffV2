@@ -1,35 +1,69 @@
-"""Device / push-subscription endpoint stubs.
-
-Stage 0 slice c ships these as authenticated stubs — they return 401 without
-a valid token and an empty-shaped response with a valid token. Slice d wires
-them to the database.
-"""
+"""Device / push-subscription endpoints."""
 
 from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from dailyriff_api.auth import CurrentUser, get_current_user
+from dailyriff_api.db import rls_transaction
+from dailyriff_api.schemas.device import DeviceRegisterRequest, DeviceResponse
 
 router = APIRouter(prefix="/devices", tags=["devices"])
 
 
-@router.get("")
-def list_devices(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
-    return []
+@router.get("", response_model=list[DeviceResponse])
+async def list_devices(
+    user: CurrentUser = Depends(get_current_user),
+) -> list[DeviceResponse]:
+    async with rls_transaction(user.id) as conn:
+        rows = await conn.fetch(
+            "SELECT id, user_id, channel, token, keys, user_agent, "
+            "created_at, last_used_at "
+            "FROM user_push_subscriptions ORDER BY created_at DESC"
+        )
+    return [DeviceResponse(**dict(r)) for r in rows]
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-def register_device(
-    payload: dict, user: CurrentUser = Depends(get_current_user)
-) -> dict:
-    return {"id": None, "user_id": str(user.id), **payload}
+@router.post(
+    "/register",
+    response_model=DeviceResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_device(
+    body: DeviceRegisterRequest,
+    user: CurrentUser = Depends(get_current_user),
+) -> DeviceResponse:
+    async with rls_transaction(user.id) as conn:
+        row = await conn.fetchrow(
+            "INSERT INTO user_push_subscriptions "
+            "(user_id, channel, token, keys, user_agent) "
+            "VALUES ($1, $2, $3, $4, $5) "
+            "ON CONFLICT (user_id, channel, token) DO UPDATE "
+            "SET keys = EXCLUDED.keys, user_agent = EXCLUDED.user_agent, "
+            "last_used_at = now() "
+            "RETURNING id, user_id, channel, token, keys, user_agent, "
+            "created_at, last_used_at",
+            user.id,
+            body.channel,
+            body.token,
+            body.keys,
+            body.user_agent,
+        )
+    assert row is not None
+    return DeviceResponse(**dict(row))
 
 
 @router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_device(
-    device_id: UUID, user: CurrentUser = Depends(get_current_user)
+async def delete_device(
+    device_id: UUID,
+    user: CurrentUser = Depends(get_current_user),
 ) -> None:
-    return None
+    async with rls_transaction(user.id) as conn:
+        result = await conn.execute(
+            "DELETE FROM user_push_subscriptions WHERE id = $1",
+            device_id,
+        )
+    if result == "DELETE 0":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

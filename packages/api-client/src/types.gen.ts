@@ -30,10 +30,6 @@ export type HealthResponse = {
     version: string;
 };
 
-export type HTTPValidationError = {
-    detail?: Array<ValidationError>;
-};
-
 export type PreferencesResponse = {
     expo_push_enabled?: boolean;
     quiet_hours_end?: (string | null);
@@ -50,14 +46,4 @@ export type PreferencesUpdateRequest = {
     quiet_hours_start?: (string | null);
     realtime_enabled?: (boolean | null);
     web_push_enabled?: (boolean | null);
-};
-
-export type ValidationError = {
-    ctx?: {
-        [key: string]: unknown;
-    };
-    input?: unknown;
-    loc: Array<(string | number)>;
-    msg: string;
-    type: string;
 };

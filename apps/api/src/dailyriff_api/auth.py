@@ -17,6 +17,17 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 ALGORITHMS = ["HS256"]
 
+# Shared openapi `responses` entry for every protected route. Declaring these
+# status codes in the spec lets Schemathesis accept 400/401/422 bodies as
+# conformant — without it, any non-2xx response is flagged as a schema
+# conformance failure on random-input fuzzing.
+PROTECTED_RESPONSES: dict[int | str, dict] = {
+    400: {"description": "Bad request — invalid input"},
+    401: {"description": "Not authenticated"},
+    405: {"description": "Method not allowed"},
+    422: {"description": "Validation error"},
+}
+
 _bearer = HTTPBearer(auto_error=False)
 
 

@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: http://localhost:54321
+      DATABASE_URL: postgresql://postgres:postgres@localhost:54322/postgres
+      GIT_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/supabase/cli/main/install.sh | sh
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Set Supabase env vars
+        run: |
+          echo "SUPABASE_ANON_KEY=$(supabase status -o env | grep ANON_KEY | cut -d= -f2-)" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE=$(supabase status -o env | grep SERVICE_ROLE_KEY | cut -d= -f2-)" >> "$GITHUB_ENV"
+          echo "SUPABASE_JWT_SECRET=$(supabase status -o env | grep JWT_SECRET | cut -d= -f2-)" >> "$GITHUB_ENV"
+
+      - name: Install Python dependencies
+        working-directory: apps/api
+        run: uv sync
+
+      - name: Run Alembic migrations
+        working-directory: apps/api
+        run: uv run alembic upgrade head
+
+      - name: Run pytest with coverage
+        working-directory: apps/api
+        run: uv run pytest --cov=src/dailyriff_api --cov-fail-under=85
+
+      - name: Run Schemathesis contract tests
+        working-directory: apps/api
+        run: |
+          uv run uvicorn dailyriff_api.main:app --host 0.0.0.0 --port 8000 &
+          UVICORN_PID=$!
+          trap 'kill $UVICORN_PID 2>/dev/null || true' EXIT
+          curl --retry-connrefused --retry 15 --retry-delay 1 --retry-all-errors \
+            --silent --fail http://localhost:8000/health > /dev/null
+          uv run schemathesis run http://localhost:8000/openapi.json --checks all
+
+      - name: Check OpenAPI snapshot freshness
+        working-directory: apps/api
+        run: |
+          uv run python -m dailyriff_api.scripts.dump_openapi > /tmp/fresh.json
+          diff /tmp/fresh.json openapi.snapshot.json || {
+            echo "::error::OpenAPI snapshot is stale. Run 'pnpm --filter api regenerate-openapi' and commit the updated snapshot."
+            exit 1
+          }
+
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate API client
+        run: pnpm --filter api-client generate
+
+      - name: Check for uncommitted codegen changes
+        run: |
+          git diff --exit-code packages/api-client/src || {
+            echo "::error::Generated API client is out of date. Run 'pnpm --filter api-client generate' and commit the changes."
+            exit 1
+          }
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter web lint
+
+      - name: Run tests with coverage
+        run: pnpm --filter web test -- --coverage
+
+      - name: Build
+        run: pnpm --filter web build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Run Playwright smoke tests
+        run: pnpm --filter web exec playwright test
+
+  mobile-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter mobile lint
+
+      - name: Run tests with coverage
+        run: pnpm --filter mobile test -- --coverage

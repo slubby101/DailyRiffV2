@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import time
 import uuid
+from contextlib import asynccontextmanager
 from typing import Callable
+from unittest.mock import AsyncMock
 
 import jwt
 import pytest
@@ -12,6 +14,24 @@ from fastapi.testclient import TestClient
 
 from dailyriff_api.main import app
 from tests.conftest import DEFAULT_JWT_SECRET
+
+
+@asynccontextmanager
+async def _fake_rls_transaction(user_id):
+    conn = AsyncMock()
+    conn.fetch = AsyncMock(return_value=[])
+    conn.fetchrow = AsyncMock(return_value=None)
+    yield conn
+
+
+@pytest.fixture(autouse=True)
+def _mock_db(monkeypatch):
+    """Patch rls_transaction so unit tests don't require a live database."""
+    import dailyriff_api.routers.devices as dev_mod
+    import dailyriff_api.routers.preferences as pref_mod
+
+    monkeypatch.setattr(dev_mod, "rls_transaction", _fake_rls_transaction)
+    monkeypatch.setattr(pref_mod, "rls_transaction", _fake_rls_transaction)
 
 
 @pytest.fixture

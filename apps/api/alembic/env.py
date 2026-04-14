@@ -23,6 +23,12 @@ DATABASE_URL = os.environ.get(
     "DATABASE_URL",
     "postgresql+psycopg://postgres:postgres@127.0.0.1:54322/postgres",
 )
+# Force the psycopg3 SQLAlchemy dialect when the URL has no explicit driver.
+# .env.example and CI both set DATABASE_URL=postgresql://... (no dialect) because
+# the application-side asyncpg pool uses that form directly. Without this
+# rewrite, SQLAlchemy would fall back to psycopg2 which isn't in pyproject.toml.
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = "postgresql+psycopg://" + DATABASE_URL[len("postgresql://") :]
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 target_metadata = None

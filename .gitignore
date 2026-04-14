@@ -12,9 +12,8 @@ out/
 # Test / coverage
 coverage/
 .nyc_output/
-
-# Generated API client output (except tracked index stub)
-packages/api-client/src/generated/
+test-results/
+playwright-report/
 
 # Env files
 .env

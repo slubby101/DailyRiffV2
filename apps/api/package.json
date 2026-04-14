@@ -1,0 +1,8 @@
+{
+  "name": "@dailyriff/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "regenerate-openapi": "uv run python -m dailyriff_api.scripts.dump_openapi > openapi.snapshot.json"
+  }
+}

@@ -25,7 +25,12 @@ jobs:
 
       - name: Install Supabase CLI
         run: |
-          curl -fsSL https://raw.githubusercontent.com/supabase/cli/main/install.sh | sh
+          curl -fsSL -o supabase.tar.gz \
+            https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz
+          tar -xzf supabase.tar.gz
+          sudo mv supabase /usr/local/bin/
+          rm supabase.tar.gz
+          supabase --version
 
       - name: Start Supabase
         run: supabase start
@@ -77,6 +82,8 @@ jobs:
           node-version: "22"
 
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -101,6 +108,8 @@ jobs:
           node-version: "22"
 
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -130,6 +139,8 @@ jobs:
           node-version: "22"
 
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

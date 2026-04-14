@@ -1,0 +1,10 @@
+-- supabase/seed.sql
+--
+-- Reserved for domain seed data.
+--
+-- Users are NOT seeded here. Raw SQL into `auth.users` skips password hashing,
+-- identities, and email confirmation, which breaks `sign_in_with_password` in
+-- the RLS isolation test. Instead, `apps/api/tests/conftest.py` creates the
+-- canonical test users via the Supabase Admin API with `email_confirm: true`.
+--
+-- Intentionally empty until Stage 1.

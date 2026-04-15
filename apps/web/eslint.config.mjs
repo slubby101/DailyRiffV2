@@ -38,5 +38,5 @@ export default [
       "jsx-a11y/tabindex-no-positive": "error",
     },
   },
-  { ignores: [".next/", "node_modules/"] },
+  { ignores: [".next/", "node_modules/", "coverage/"] },
 ];

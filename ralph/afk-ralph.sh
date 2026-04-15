@@ -52,18 +52,57 @@ inject_sandbox_credentials() {
 }
 
 SANDBOX_NAME="claude-$(basename "$REPO_ROOT")"
-# Custom template built for DailyRiff: ubuntu 25.10 + node 22 + pnpm 9 + uv + supabase CLI.
-# Built via: `docker sandbox save` after installing tools into a base `claude` sandbox.
-# If the template doesn't exist on this machine, fall back to the stock `claude` template.
-SANDBOX_TEMPLATE="dailyriff-dev:v1"
-if ! docker image inspect "$SANDBOX_TEMPLATE" >/dev/null 2>&1; then
-  echo "Warning: template '${SANDBOX_TEMPLATE}' not found; falling back to stock 'claude' template."
-  echo "         Rebuild with ralph/build-sandbox-template.sh for faster iterations."
-  SANDBOX_TEMPLATE="claude"
-fi
+
+# Note on custom templates: `docker sandbox save` + `-t <image>` is broken on this
+# Docker Desktop version — `docker sandbox create` ignores `--pull-template never` and
+# always contacts the registry, so locally-saved templates can't be reused. Instead, we
+# bootstrap dev tools into the standard `claude` sandbox on first setup (see
+# bootstrap_sandbox_tools below). The sandbox is persistent across `run` invocations,
+# so the install only happens once per sandbox lifetime.
+
+# Bootstrap dev tools into a newly-created sandbox. Idempotent — checks for each tool
+# and only installs what's missing. Safe to call every run.
+bootstrap_sandbox_tools() {
+  echo "Bootstrapping sandbox dev tools (idempotent)..."
+  docker sandbox exec "$SANDBOX_NAME" bash -c '
+    set -e
+    needs_install=0
+    if ! command -v pnpm >/dev/null 2>&1; then needs_install=1; fi
+    if ! command -v supabase >/dev/null 2>&1; then needs_install=1; fi
+    node_major=$(node --version 2>/dev/null | sed "s/^v//;s/\..*//")
+    if [[ "$node_major" != "22" ]]; then needs_install=1; fi
+
+    if [[ "$needs_install" -eq 0 ]]; then
+      echo "  All tools already present (node $(node --version), pnpm $(pnpm --version), supabase $(supabase --version))"
+      exit 0
+    fi
+
+    echo "  Installing missing tools..."
+
+    if [[ "$node_major" != "22" ]]; then
+      echo "  -> Node 22 via NodeSource"
+      sudo apt-get remove -y nodejs >/dev/null 2>&1 || true
+      curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - >/dev/null 2>&1
+      sudo apt-get install -y nodejs >/dev/null 2>&1
+    fi
+
+    if ! command -v pnpm >/dev/null 2>&1; then
+      echo "  -> pnpm 9"
+      sudo npm install -g pnpm@9 >/dev/null 2>&1
+    fi
+
+    if ! command -v supabase >/dev/null 2>&1; then
+      echo "  -> supabase CLI"
+      curl -sL -o /tmp/supabase.tar.gz \
+        https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz
+      cd /tmp && tar -xzf supabase.tar.gz && sudo mv supabase /usr/local/bin/
+    fi
+
+    echo "  Bootstrap complete: node $(node --version), pnpm $(pnpm --version), supabase $(supabase --version)"
+  '
+}
 
 echo "Starting AFK RALPH: PRD #${PRD_ISSUE}, $MAX_ITERATIONS max iterations"
-echo "Sandbox template: ${SANDBOX_TEMPLATE}"
 echo ""
 
 # --- Host-side Supabase orchestration ---
@@ -89,15 +128,12 @@ if command -v supabase >/dev/null 2>&1 && [[ -f supabase/config.toml ]]; then
   export SANDBOX_SUPABASE_SERVICE_ROLE="${SUPABASE_SERVICE_ROLE_HOST}"
 fi
 
-# Ensure sandbox exists and has OAuth credentials before the loop
+# Ensure sandbox exists, bootstrap dev tools, and inject OAuth credentials.
 if ! docker sandbox ls 2>/dev/null | awk 'NR>1 {print $1}' | grep -q "^${SANDBOX_NAME}$"; then
-  echo "Creating sandbox '${SANDBOX_NAME}' from template '${SANDBOX_TEMPLATE}'..."
-  if [[ "$SANDBOX_TEMPLATE" == "claude" ]]; then
-    docker sandbox create --name "$SANDBOX_NAME" claude "$REPO_ROOT"
-  else
-    docker sandbox create --name "$SANDBOX_NAME" --load-local-template -t "$SANDBOX_TEMPLATE" "$REPO_ROOT"
-  fi
+  echo "Creating sandbox '${SANDBOX_NAME}'..."
+  docker sandbox create --name "$SANDBOX_NAME" claude "$REPO_ROOT"
 fi
+bootstrap_sandbox_tools
 inject_sandbox_credentials
 
 # Inject Supabase env vars into sandbox so tests can reach the host supabase.

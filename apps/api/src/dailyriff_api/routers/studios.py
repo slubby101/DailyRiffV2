@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone as tz
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -50,21 +50,38 @@ async def create_studio(
     body: StudioCreateRequest,
     user: CurrentUser = Depends(get_current_user),
 ) -> StudioResponse:
+    # Generate the studio id client-side so we can INSERT studios and
+    # studio_members in the right order without hitting the RLS + RETURNING
+    # chicken-and-egg problem: the SELECT policy on studios requires the user
+    # to be a member (via studio_members), but the member row only exists
+    # after the studios row is created. INSERT ... RETURNING would trigger
+    # the SELECT policy check on the new row and fail because the member row
+    # isn't there yet. Splitting into (INSERT studios) -> (INSERT member) ->
+    # (SELECT studio) lets the final SELECT succeed via select_member.
+    studio_id = uuid4()
     async with rls_transaction(user.id) as conn:
-        row = await conn.fetchrow(
-            f"INSERT INTO studios (name, display_name, timezone) "
-            f"VALUES ($1, $2, $3) "
-            f"RETURNING {STUDIO_COLUMNS}",
+        await conn.execute(
+            "INSERT INTO studios (id, name, display_name, timezone) "
+            "VALUES ($1, $2, $3, $4)",
+            studio_id,
             body.name,
             body.display_name,
             body.timezone,
         )
-        assert row is not None
         await conn.execute(
             "INSERT INTO studio_members (studio_id, user_id, role) "
             "VALUES ($1, $2, 'owner')",
-            row["id"],
+            studio_id,
             user.id,
+        )
+        row = await conn.fetchrow(
+            f"SELECT {STUDIO_COLUMNS} FROM studios WHERE id = $1",
+            studio_id,
+        )
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create studio",
         )
     return StudioResponse(**dict(row))
 

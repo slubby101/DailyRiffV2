@@ -146,7 +146,11 @@ async def create_setting(
             body.category,
             user.id,
         )
-        assert row is not None
+        if row is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create platform setting",
+            )
         await conn.execute(
             "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details) "
             "VALUES ($1, $2, $3, $4, $5)",

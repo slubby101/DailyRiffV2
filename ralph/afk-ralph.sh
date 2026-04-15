@@ -191,8 +191,12 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
   prd_body=$(gh issue view "$PRD_ISSUE" --repo "$REPO" --json number,title,state,body \
     --jq '"# PRD: \(.title) (#\(.number))\nState: \(.state)\n\n\(.body)"')
 
-  echo "Finding sub-issues..."
-  sub_issue_numbers=$(gh search issues --repo "$REPO" "Parent PRD #${PRD_ISSUE}" \
+  echo "Finding sub-issues (excluding hitl-labeled)..."
+  # HARD GUARDRAIL: `-label:hitl` excludes human-in-the-loop issues from AFK runs.
+  # HITL issues (legal review, prod creds, manual testing, third-party account setup)
+  # must never run unattended. To work on a HITL issue, use ralph-once.sh with human
+  # supervision, or remove the label after completing the human-required setup.
+  sub_issue_numbers=$(gh search issues --repo "$REPO" "Parent PRD #${PRD_ISSUE} -label:hitl" \
     --json number --jq '.[].number' | grep -v "^${PRD_ISSUE}$" | sort -n)
 
   if [[ -z "$sub_issue_numbers" ]]; then
@@ -219,11 +223,12 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
   # Ensure OAuth credentials are available in the sandbox
   inject_sandbox_credentials
 
-  # Fetch each sub-issue's full details
+  # Fetch each sub-issue's full details, including labels so the prompt-level
+  # HITL check has something to match on (belt-and-suspenders with the shell filter above).
   sub_issues=""
   for num in $sub_issue_numbers; do
-    detail=$(gh issue view "$num" --repo "$REPO" --json number,title,state,body \
-      --jq '"---\n## Sub-issue #\(.number): \(.title)\nState: \(.state)\n\n\(.body)"')
+    detail=$(gh issue view "$num" --repo "$REPO" --json number,title,state,body,labels \
+      --jq '"---\n## Sub-issue #\(.number): \(.title)\nState: \(.state)\nLabels: \([.labels[].name] | join(\", \"))\n\n\(.body)"')
     sub_issues="${sub_issues}\n${detail}"
   done
 

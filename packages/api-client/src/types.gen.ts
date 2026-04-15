@@ -47,3 +47,29 @@ export type PreferencesUpdateRequest = {
     realtime_enabled?: (boolean | null);
     web_push_enabled?: (boolean | null);
 };
+
+export type StudioCreateRequest = {
+    display_name?: (string | null);
+    name: string;
+    timezone?: string;
+};
+
+export type StudioResponse = {
+    beta_cohort: boolean;
+    created_at: string;
+    display_name?: (string | null);
+    id: string;
+    logo_url?: (string | null);
+    name: string;
+    primary_color?: (string | null);
+    state: string;
+    timezone: string;
+    updated_at: string;
+};
+
+export type StudioUpdateRequest = {
+    display_name?: (string | null);
+    logo_url?: (string | null);
+    primary_color?: (string | null);
+    timezone?: (string | null);
+};

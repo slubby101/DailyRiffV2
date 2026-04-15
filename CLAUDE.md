@@ -112,3 +112,10 @@ packages/api-client/src/   index.ts, types.gen.ts (auto-generated — never edit
 - `ralph/prompt.md` — Ralph's TDD instructions per iteration
 - `ralph/review-prompt.md` — Ralph's per-iteration code review gate
 - `docs/prds/stage-0-foundation.md` — Stage 0 Foundation PRD
+- `docs/prds/stage-1-foundation.md` — Stage 1 Foundation PRD (MVP)
+- `docs/prds/stage-1-deferred-features.md` — Stage 1 scope tracker (Q1–Q29 grill-me output)
+- `docs/DESIGN.md` — Design system (typography, colors, spacing, motion, voice)
+
+## Design System
+
+Always read `docs/DESIGN.md` before making any visual or UI decisions. All font choices (Fraunces display + Geist body + Geist Mono), colors (warm amber brand primary, 12-swatch per-studio Radix palette), spacing, radius (8px), and aesthetic direction (Editorial Warmth) are defined there. Do not deviate without explicit user approval. In QA mode, flag any code that doesn't match `docs/DESIGN.md`.

@@ -63,52 +63,9 @@ def upgrade() -> None:
 
     op.execute("ALTER TABLE studios ENABLE ROW LEVEL SECURITY")
     op.execute(
-        'CREATE POLICY "select_member" ON studios '
-        "FOR SELECT TO authenticated "
-        "USING ("
-        "  EXISTS ("
-        "    SELECT 1 FROM studio_members sm"
-        "    WHERE sm.studio_id = studios.id"
-        "    AND sm.user_id = auth.uid()"
-        "  )"
-        ")"
-    )
-    op.execute(
         'CREATE POLICY "insert_authenticated" ON studios '
         "FOR INSERT TO authenticated "
         "WITH CHECK (true)"
-    )
-    op.execute(
-        'CREATE POLICY "update_member" ON studios '
-        "FOR UPDATE TO authenticated "
-        "USING ("
-        "  EXISTS ("
-        "    SELECT 1 FROM studio_members sm"
-        "    WHERE sm.studio_id = studios.id"
-        "    AND sm.user_id = auth.uid()"
-        "    AND sm.role IN ('owner', 'teacher')"
-        "  )"
-        ") "
-        "WITH CHECK ("
-        "  EXISTS ("
-        "    SELECT 1 FROM studio_members sm"
-        "    WHERE sm.studio_id = studios.id"
-        "    AND sm.user_id = auth.uid()"
-        "    AND sm.role IN ('owner', 'teacher')"
-        "  )"
-        ")"
-    )
-    op.execute(
-        'CREATE POLICY "delete_owner" ON studios '
-        "FOR DELETE TO authenticated "
-        "USING ("
-        "  EXISTS ("
-        "    SELECT 1 FROM studio_members sm"
-        "    WHERE sm.studio_id = studios.id"
-        "    AND sm.user_id = auth.uid()"
-        "    AND sm.role = 'owner'"
-        "  )"
-        ")"
     )
 
     # ---- studio_members ---------------------------------------------------
@@ -173,6 +130,51 @@ def upgrade() -> None:
         'CREATE POLICY "delete_own" ON studio_members '
         "FOR DELETE TO authenticated "
         "USING (user_id = auth.uid())"
+    )
+
+    # ---- studios RLS policies that reference studio_members ---------------
+    op.execute(
+        'CREATE POLICY "select_member" ON studios '
+        "FOR SELECT TO authenticated "
+        "USING ("
+        "  EXISTS ("
+        "    SELECT 1 FROM studio_members sm"
+        "    WHERE sm.studio_id = studios.id"
+        "    AND sm.user_id = auth.uid()"
+        "  )"
+        ")"
+    )
+    op.execute(
+        'CREATE POLICY "update_member" ON studios '
+        "FOR UPDATE TO authenticated "
+        "USING ("
+        "  EXISTS ("
+        "    SELECT 1 FROM studio_members sm"
+        "    WHERE sm.studio_id = studios.id"
+        "    AND sm.user_id = auth.uid()"
+        "    AND sm.role IN ('owner', 'teacher')"
+        "  )"
+        ") "
+        "WITH CHECK ("
+        "  EXISTS ("
+        "    SELECT 1 FROM studio_members sm"
+        "    WHERE sm.studio_id = studios.id"
+        "    AND sm.user_id = auth.uid()"
+        "    AND sm.role IN ('owner', 'teacher')"
+        "  )"
+        ")"
+    )
+    op.execute(
+        'CREATE POLICY "delete_owner" ON studios '
+        "FOR DELETE TO authenticated "
+        "USING ("
+        "  EXISTS ("
+        "    SELECT 1 FROM studio_members sm"
+        "    WHERE sm.studio_id = studios.id"
+        "    AND sm.user_id = auth.uid()"
+        "    AND sm.role = 'owner'"
+        "  )"
+        ")"
     )
 
 

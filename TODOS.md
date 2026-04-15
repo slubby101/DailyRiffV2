@@ -6,13 +6,54 @@ Items deferred from the Stage 1 planning cycle (2026-04-15) that should be revis
 
 ## Deferred from this review cycle
 
-### Outside-voice plan review (skipped 2026-04-15)
-- **What:** Run an independent second AI reviewer (codex or Claude subagent) against `docs/prds/stage-1-foundation.md` to catch structural blind spots the review pipeline missed.
-- **Why:** The Stage 1 PRD is 2200+ lines, 36 slices, the highest-stakes document in the repo. Cross-model review is cheap signal on whether the plan has a gaping hole.
-- **When:** Before implementation starts in earnest. Ideally before Ralph runs on slices beyond Slice 0 / #17.
-- **Context:** Was offered at the end of `/plan-eng-review` and deliberately skipped for time. The review pipeline (grill-me Q1–Q29, design review Pass 1–7, eng review F1–F11 + failure-mode gaps) is thorough but single-model.
-- **Estimated effort:** 2–5 min if codex is available. Results will be either "no new findings" (confidence boost) or "1–3 structural issues we missed" (saves a week of implementation rework).
-- **Action:** Run `/plan-eng-review` and select "A) Run outside voice" at the end, OR invoke directly with `codex exec` on the PRD.
+### Outside-voice plan review — RAN 2026-04-15, findings parked for next cycle
+- **What:** Codex CLI (`codex-cli 0.120.0`, reasoning effort = high) reviewed `docs/prds/stage-1-foundation.md` after the inside pipeline (grill-me Q1–Q29, design review, eng review F1–F11) had landed.
+- **Status:** Findings NOT applied. User instructed "ignore all codex for now, document for next dev cycle."
+- **One exception applied:** Codex #19 surfaced that the PRD's "Further Notes" section still said Stage 1 "retires `auth.py` and `realtime_outbox`" even though the Architecture section had been corrected earlier in the session to say both are preserved. This was an internal contradiction in the PRD (a bug in my prior edits, not a codex recommendation). Fixed in the same commit that added this TODOS section. Revert via `git revert` if you want the codex finding to be fully parked.
+
+### Codex findings parked for next dev cycle review
+
+Codex returned 20 substantive findings. All 20 remain actionable. Review them at Stage 2 kickoff OR when revisiting Stage 1 scope mid-beta. Grouped by type below. Raw codex output not preserved in the repo (it's in the session transcript + gstack analytics at `~/.gstack/analytics/`).
+
+#### Bucket A — Contradictions / bugs (1 applied, rest parked)
+
+- **C19 (APPLIED):** PRD "Further Notes" section contradicted the Architecture section on Stage 0 auth widening + `realtime_outbox` retention. Fixed.
+
+#### Bucket B — Real technical gaps the inside review missed (8 findings, all parked)
+
+- **C3 — Identity model collisions.** Can one `auth.users` row be owner+teacher, parent+teacher, parent across multiple studios, or student→teen→adult without table/role collisions? The PRD names `students`, `parents`, `teachers`, `dailyriff_employees` tables but never specifies the join pattern. Affects schema and auth for every persona-scoped router. **Where to fix:** new "Identity model" subsection in PRD § Implementation Decisions, committed to a single-row-per-auth-user `profiles` table with persona enum + explicit `studio_members` junction.
+- **C4 — Assignment state machine fuzzy.** `assignments.status ∈ active/completed/overdue` is defined but not *what makes* an assignment complete (first valid recording? teacher-marked? multiple recordings count?). Also: late uploads after due_date — do they still ack? Re-open completed? **Where to fix:** new "Assignment lifecycle" subsection.
+- **C5 — CRITICAL: Server-side duration verification missing.** PRD's 300–3600 second DB CHECK constraint only validates whatever value the client sends. A malicious student can send `duration_seconds=360` for a 10-second recording and the server accepts. **The entire "proof of practice" claim is fake without server-side audio decode.** **Where to fix:** add requirement that `upload-complete` runs `ffprobe` or `mutagen` on the R2 object and rejects if measured duration diverges from client-reported by >5%. DB CHECK becomes secondary defense.
+- **C7 — COPPA deletion scope incomplete.** PRD covers DB + R2 but NOT: Supabase PITR (7-day retention), daily Supabase backups, Postmark email logs, Sentry events with user context, PostHog events, BetterStack logs, **local Expo mobile device caches**. "Permanent deletion" is undefined across the real data estate. **Where to fix:** add "COPPA deletion surface area" table mapping every data sink to its deletion mechanism, retention, and whether vendor-assisted.
+- **C8 — R2 versioning + PITR vs deletion promise = architectural dependency.** PRD's Q25.d carve-out treats it as a legal review item; codex argues it's an architectural decision that can invalidate the storage strategy late. **Where to fix:** elevate from "legal review" to "pre-implementation decision" OR default to 1-day versioning retention for COPPA objects now.
+- **C9 — Offline recording cache = regulated storage.** Expo 10-recording local cache on child's phone is outside deletion control. If consent is revoked or child is deleted, recordings on the device linger. **Where to fix:** on app launch, read each cached recording's child consent status; wipe if revoked or pending_deletion; fail-safe wipe all cached recordings if API unreachable for >24h.
+- **C11 — Alembic + `supabase db push` split creates disagreement windows.** Code can land before its RLS policy does. Inside review noted the split but treated it as benign. **Where to fix:** require any slice adding a tenant-scoped table to ship both scripts in the same PR / same merge / same CI run, enforced by CI.
+- **C12 — "Audit trail first" contradicted by manual Supabase Studio operations.** PRD principle says every sensitive op writes to `activity_logs` first. But manual ops (seed scripts, break-glass runbooks) via Supabase Studio bypass FastAPI entirely. **Where to fix:** amend principle — every *application-layer* op writes audit; manual ops must write to `activity_logs` via SQL snippet in the runbook, and `activity_logs` gains a `source enum('app', 'manual_sql', 'pg_cron')` column.
+
+#### Bucket C — Strategic scope concerns (9 findings, all parked)
+
+Codex argues Stage 1 is overscoped for a solo-operator serving a 3–5 studio warm-intro beta. Individual findings:
+
+- **C1 — Plan too big for solo-operator MVP.** Web for 4 personas + Expo + realtime + push + messaging + payments ledger + waitlist + superadmin suite + compliance + formal a11y = "small SaaS company roadmap," not a beta foundation.
+- **C2 — Drop Expo mobile for Stage 1.** Mobile web recording is enough for 3–5 studios. Expo doubles release, QA, auth, notification, media, and support burden before PMF signal exists. **Claude's read:** partial agree — worth serious consideration; would save ~2 slices and all EAS/signing headache. If mobile browser recording works, defer native Expo to Stage 1.5.
+- **C13 — `platform_settings` overreach.** Making nearly every knob live-editable adds a second product to build (config validation, blast-radius control, rollback, cache coherency). **Claude's read:** partial agree — keep the table + service (other services read from it); defer the live-editable superadmin UI to Stage 2.
+- **C14 — Notification system oversized and race-prone.** Realtime + polling fallback + email fallback + web push + Expo push + templates + prefs + queues + cron drains is too many moving parts for "teacher hears about recording" + "user hears about message." **Claude's read:** disagree — the complexity is inherent to 3-channel delivery. Simpler would mean dropping push, which hurts the product.
+- **C15 — Lesson system under-modeled.** Recurrence + DST + attendance + absences + makeups + calendar export needs explicit exception semantics. The simple rows + recurrence flags schema isn't enough. **Claude's read:** agree — this is a real gap. Recurring lesson exception handling is a known-hard modeling problem. Worth adding a "Lesson exception model" subsection.
+- **C16 — Payments ledger = liability magnet with weak upside.** Manual charges/refunds/balances without real processing will create disputes and bad data you later unwind. **Claude's read:** partial agree — could ship even simpler: display-only for parents, teacher-entered data with no invariants enforced, explicit "this is a notebook not a ledger" disclaimer. Revisit when Stripe Connect lands in Stage 2.
+- **C17 — Public waitlist miscalibrated for warm-intro beta.** Invite-only is simpler and safer for the first 3–5 studios. Public acquisition surfaces are attack surface + support load before the loop is proven. **Claude's read:** agree — ship a private beta landing page with token-gated invitation, defer the public waitlist form to Stage 1.5 when traffic warrants it.
+- **C18 — Launch gates not aligned with team size.** 7 straight green days + manual a11y per persona + multi-engine + multi-device + legal + runbooks + app-store flow + 48h observation is "a serious org's release checklist." Solo operator will slip forever or silently stop honoring the bar. **Claude's read:** disagree — the gates are a forcing function for a high-stakes COPPA product. Relaxing feels like permission to ship sloppy. But the 7-day CI green requirement specifically could relax to 48h.
+- **C20 — Operator scale before user value.** Building employees page, secret-rotation UI, platform-settings UI, beta-feedback surface, verification queue, access-logs viewer before proving teachers and students actually use the recording loop is backwards. **Claude's read:** partial agree — impersonation + verification queue are launch-critical (COPPA + support). Employees page, secret-rotation UI, and platform-settings UI can defer to Stage 1.5.
+
+#### Bucket D — Technical detail (2 findings, parked)
+
+- **C6 — Raw browser-recorded audio without transcoding is a product risk.** Codec fragmentation, playback inconsistencies, file-size variance, cross-browser debugging on the most important workflow. **Claude's read:** disagree with codex — PRD intentionally preserves Stage 0's "no AAC transcoding" decision, and MediaRecorder across modern browsers produces playable output via `<audio>`. Revisit only if real beta studios hit playback bugs.
+- **C10 — Staging contradiction.** PRD says "staging = reseedable demo on free tier" AND "staging running full copy of prod for 7 days with no drift." These are different environments with different risk rules. **Claude's read:** agree — the language is inconsistent. Should clarify: staging is reseedable demo for development; a separate "pre-prod soak" environment runs for the 7-day pre-launch gate, or the 7-day gate is moved to running against prod itself (canary-style).
+
+### Recommended next-cycle review sequence
+
+1. **First, resolve Bucket B findings** (8 real technical gaps). These are bugs/gaps, not scope calls. Apply fixes to PRD before any Stage 2 planning happens.
+2. **Then, work through Bucket C with explicit scope decisions** at Stage 1 midpoint review (~3 weeks into implementation, when the core loop slices are landing). This is the right moment to ask "is anything we scoped actually unnecessary?" because you'll have real data on Ralph throughput.
+3. **Bucket D is lowest priority** — revisit only if implementation surfaces the issue.
 
 ### Visual mockups for 4 focus surfaces (deferred 2026-04-15)
 - **What:** Generate approved mockups for marketing homepage (#24), student recording flow (#28), teacher pending-reviews (#28), studio onboarding (#25) using the gstack designer against `docs/DESIGN.md` as the calibration target.

@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone as tz
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from dailyriff_api.auth import (
@@ -51,6 +48,26 @@ async def list_settings(
             f"SELECT {SETTING_COLUMNS} FROM platform_settings ORDER BY category, key",
         )
     return [SettingResponse(**dict(r)) for r in rows]
+
+
+@router.get(
+    "/activity-logs/",
+    response_model=list[ActivityLogResponse],
+    responses=SUPERADMIN_RESPONSES,
+)
+async def list_activity_logs(
+    limit: int = 50,
+    offset: int = 0,
+    user: CurrentUser = Depends(_require_superadmin),
+) -> list[ActivityLogResponse]:
+    async with service_transaction() as conn:
+        rows = await conn.fetch(
+            f"SELECT {LOG_COLUMNS} FROM activity_logs "
+            f"ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            limit,
+            offset,
+        )
+    return [ActivityLogResponse(**dict(r)) for r in rows]
 
 
 @router.get(
@@ -140,23 +157,3 @@ async def create_setting(
             {"value": body.value_json},
         )
     return SettingResponse(**dict(row))
-
-
-@router.get(
-    "/activity-logs/",
-    response_model=list[ActivityLogResponse],
-    responses=SUPERADMIN_RESPONSES,
-)
-async def list_activity_logs(
-    limit: int = 50,
-    offset: int = 0,
-    user: CurrentUser = Depends(_require_superadmin),
-) -> list[ActivityLogResponse]:
-    async with service_transaction() as conn:
-        rows = await conn.fetch(
-            f"SELECT {LOG_COLUMNS} FROM activity_logs "
-            f"ORDER BY created_at DESC LIMIT $1 OFFSET $2",
-            limit,
-            offset,
-        )
-    return [ActivityLogResponse(**dict(r)) for r in rows]

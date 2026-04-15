@@ -264,7 +264,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
   sub_issues=""
   for num in $sub_issue_numbers; do
     detail=$(gh issue view "$num" --repo "$REPO" --json number,title,state,body,labels \
-      --jq '"---\n## Sub-issue #\(.number): \(.title)\nState: \(.state)\nLabels: \([.labels[].name] | join(\", \"))\n\n\(.body)"')
+      --jq '"---\n## Sub-issue #\(.number): \(.title)\nState: \(.state)\nLabels: \([.labels[].name] | join(", "))\n\n\(.body)"')
     sub_issues="${sub_issues}\n${detail}"
   done
 

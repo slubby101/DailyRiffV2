@@ -382,6 +382,13 @@ ONLY WORK ON A SINGLE SUB-ISSUE PER ITERATION.")
     exit 0
   fi
 
+  if [[ "$result" == *"<promise>ABORT</promise>"* ]]; then
+    echo "=== RALPH: Abort signal from iteration $i — stopping loop cleanly ==="
+    echo "    Reason should be in the iteration's final result block above."
+    echo "    Review and decide whether to fix-and-retry or accept partial progress."
+    exit 0
+  fi
+
   # --- Code review gate ---
   echo "--- Code review for iteration $i ---"
 

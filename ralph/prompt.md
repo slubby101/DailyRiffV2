@@ -9,6 +9,8 @@ Your job is to pick ONE open, unblocked sub-issue from the PRD, implement it usi
 
 2. **Check issue state first.** Review the sub-issue list provided. Skip issues that are closed or blocked by open issues.
 
+   **NEVER work on an issue labeled `hitl`.** HITL (human-in-the-loop) issues require human hands — legal review, production credentials, manual testing, third-party account setup, etc. If the only remaining open issues are all `hitl`-labeled, output `<promise>COMPLETE</promise>` and stop — do not attempt them. Each sub-issue's labels are included in the context block; check them before picking.
+
 3. **Task priority order:**
    - Architecture/scaffolding (types, interfaces, directory structure)
    - Integration points (wiring modules together)

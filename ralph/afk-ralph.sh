@@ -96,6 +96,44 @@ inject_sandbox_credentials() {
 
 SANDBOX_NAME="claude-$(basename "$REPO_ROOT")"
 
+# jq filters for Claude's --output-format stream-json. The CLI emits one JSON
+# object per line; `stream_text` extracts assistant text for live display and
+# `final_result` extracts the final result payload for sentinel detection
+# (<promise>COMPLETE</promise>, <promise>ABORT</promise>, etc).
+RALPH_STREAM_TEXT='select(.type == "assistant").message.content[]? | select(.type == "text").text // empty'
+RALPH_FINAL_RESULT='select(.type == "result").result // empty'
+
+# Run Claude in the sandbox with streaming output.
+# Streams assistant text to stderr in real time so a human watching the loop
+# sees Ralph's work progressively instead of a dead zone between iteration
+# start and end. Returns the final result on stdout so the caller can check
+# for <promise> sentinels.
+#
+# Usage: result=$(run_claude_streaming "<prompt>")
+run_claude_streaming() {
+  local prompt="$1"
+  local tmpfile
+  tmpfile=$(mktemp)
+
+  # Pipe: Claude stream-json -> keep JSON lines only -> tee to tmpfile ->
+  # extract assistant text to stderr for live display. The subshell for `tee`
+  # preserves the tmpfile for the final_result read after the pipe completes.
+  docker sandbox run "$SANDBOX_NAME" -- \
+    --verbose \
+    --print \
+    --output-format stream-json \
+    --permission-mode bypassPermissions \
+    "$prompt" \
+    | grep --line-buffered '^{' \
+    | tee "$tmpfile" \
+    | jq --unbuffered -r "$RALPH_STREAM_TEXT" >&2
+
+  # After streaming finishes, read the final result payload from the tmpfile.
+  # This is what the caller greps for <promise>...</promise> sentinels.
+  jq -r "$RALPH_FINAL_RESULT" "$tmpfile"
+  rm -f "$tmpfile"
+}
+
 # Note on custom templates: `docker sandbox save` + `-t <image>` is broken on this
 # Docker Desktop version — `docker sandbox create` ignores `--pull-template never` and
 # always contacts the registry, so locally-saved templates can't be reused. Instead, we
@@ -321,10 +359,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo -e "${sub_issues}"
   } > "$ctx_file"
 
-  result=$(docker sandbox run "$SANDBOX_NAME" -- \
-    -p \
-    --permission-mode bypassPermissions \
-    "@ralph/prompt.md
+  result=$(run_claude_streaming "@ralph/prompt.md
 @${ctx_file}
 
 Read the PRD and sub-issues above. Then:
@@ -337,6 +372,8 @@ Read the PRD and sub-issues above. Then:
 7. If ALL sub-issues are now closed, output <promise>COMPLETE</promise>.
 ONLY WORK ON A SINGLE SUB-ISSUE PER ITERATION.")
 
+  echo ""
+  echo "--- iteration $i final result ---"
   echo "$result"
   echo ""
 
@@ -348,13 +385,12 @@ ONLY WORK ON A SINGLE SUB-ISSUE PER ITERATION.")
   # --- Code review gate ---
   echo "--- Code review for iteration $i ---"
 
-  review_result=$(docker sandbox run "$SANDBOX_NAME" -- \
-    -p \
-    --permission-mode bypassPermissions \
-    "@ralph/review-prompt.md
+  review_result=$(run_claude_streaming "@ralph/review-prompt.md
 
 Review the changes from the most recent commit. Follow the review procedure exactly.")
 
+  echo ""
+  echo "--- iteration $i review final result ---"
   echo "$review_result"
   echo ""
 

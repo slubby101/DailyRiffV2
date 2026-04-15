@@ -63,6 +63,16 @@ Your job is to pick ONE open, unblocked sub-issue from the PRD, implement it usi
 9. **Completion signal.** If every sub-issue in the list is now closed (or was already closed), output exactly:
    <promise>COMPLETE</promise>
 
+10. **Abort signal.** Output exactly `<promise>ABORT</promise>` to stop the loop cleanly if — and only if — you hit one of these conditions:
+
+    - **Unrecoverable environment or infra state.** The sandbox is broken in a way you cannot fix (supabase down, credentials missing, dependencies failing to install, test suite can't be detected, git repo is in an unusable state). Explain the blocker in your final response.
+    - **No unblocked, actionable sub-issue.** Every open sub-issue is either blocked by another open issue, labeled `hitl` (human-in-the-loop), or already closed. You have nothing legitimate to pick up.
+    - **Scope-creep guard against vague sub-issues.** You have already met the acceptance criteria of the sub-issue you picked and further work would be unrequested improvement. Close the sub-issue normally, THEN abort so the human can decide what's next.
+
+    Never abort to avoid doing work that is clearly in scope. Abort is for stopping *cleanly* when continuing would be either impossible or out of scope — not for giving up on a hard task.
+
+    When you emit `<promise>ABORT</promise>`, explain the reason in one paragraph immediately before the sentinel so the human reading the log knows what to fix.
+
 ## Quality Standards
 
 Follow the project's README.md, CLAUDE.md, and architecture docs for coding conventions, boundaries, and rules. Read existing code patterns before writing new code. Match the project's style — language, formatting, naming conventions.

@@ -60,6 +60,19 @@ Your job is to pick ONE open, unblocked sub-issue from the PRD, implement it usi
    gh issue close <number> --repo <repo> --comment "Completed in <commit-sha>. <brief summary>"
    ```
 
+   **Then update `RALPH_DECISIONS.md` at the repo root** with one terse entry capturing the *why* of this iteration (non-obvious tradeoffs, dependency choices, environment quirks). Issue state already tells future-Ralph *what* was done; this file tells future-Ralph why.
+
+   Read `RALPH_DECISIONS.md` at the start of every iteration (create it from the template in the repo if it doesn't exist). Append a new entry at the bottom:
+
+   ```
+   ### <YYYY-MM-DD HH:MM UTC> / iteration #<N> of PRD #<PRD> / closed #<sub-issue>
+   - **Decision:** <one or two lines; what was chosen and why, especially non-obvious tradeoffs>
+   - **Blocker:** <one line if hit and worked around, otherwise omit>
+   - **Next:** <one line pointer to a follow-up if this work unblocks something specific>
+   ```
+
+   Keep it terse — one to three bullets, single lines each. This is working memory, not a changelog. Amend the commit from step 7 with `git commit --amend --no-edit` to include the updated `RALPH_DECISIONS.md`, so each iteration's decisions land in the same commit as the code change. Never rewrite past entries — append-only.
+
 9. **Completion signal.** If every sub-issue in the list is now closed (or was already closed), output exactly:
    <promise>COMPLETE</promise>
 

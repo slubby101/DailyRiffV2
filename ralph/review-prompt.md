@@ -31,14 +31,19 @@ Examine the diff from the most recent commit using `git diff HEAD~1`.
 
 1. Run `git diff HEAD~1` to see the changes from the last commit.
 2. Read any files needed to understand the full context of the changes.
-3. Detect the project's test command from project config (package.json, pyproject.toml, Makefile, Cargo.toml, CLAUDE.md, etc.) and verify tests pass.
+3. **Run the FULL test suite, including integration tests that hit a real database.** Detect the project's test command from project config (package.json, pyproject.toml, Makefile, Cargo.toml, CLAUDE.md, etc.) but do NOT restrict to unit tests only. Unit tests that mock the database cannot catch real-world failures like RLS policy rejections, foreign key violations, migration ordering bugs, or RETURNING visibility failures — exactly the class of bug the review gate exists to catch. If the project's test runner supports markers or subdirectories (e.g. `pytest tests/` over the whole suite rather than `pytest tests/unit`, or `pnpm test` that includes integration), use the broader invocation.
+
+   For this repo specifically: run `pytest` from `apps/api/` with the full suite (no `-k` filter, no path narrowing). Integration tests require a running supabase on `localhost:54321` — it is started before the review gate runs, so tests that check `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE` env vars should execute, not skip. If integration tests are being skipped when they should run, that is itself a review finding worth flagging.
 4. If you find HIGH SIGNAL issues:
    a. Fix each issue directly in the code.
-   b. Run the test suite to verify your fixes pass.
+   b. Run the FULL test suite again (including integration tests) to verify your fixes pass and haven't regressed anything else.
    c. Commit with message: `review: <brief description of fixes>`
    d. Output: `<review>FIXES_APPLIED</review>` followed by a bullet list of what you fixed and why.
-5. If no issues found:
+5. If no issues found AND the full test suite passed (including integration):
    a. Output: `<review>CLEAN</review>`
+6. If the full test suite could not be run (e.g. environment missing) OR integration tests were unexpectedly skipped:
+   a. Do NOT output `<review>CLEAN</review>` — that's a false-positive risk.
+   b. Instead, output `<review>INCOMPLETE</review>` with a one-line reason so the human reviewing the PR knows to run tests themselves.
 
 ## Rules
 

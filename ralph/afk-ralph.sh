@@ -403,8 +403,13 @@ Review the changes from the most recent commit. Follow the review procedure exac
 
   if [[ "$review_result" == *"<review>FIXES_APPLIED</review>"* ]]; then
     echo "--- Review: fixes applied, continuing ---"
-  else
+  elif [[ "$review_result" == *"<review>INCOMPLETE</review>"* ]]; then
+    echo "--- Review: INCOMPLETE — review gate could not run full test suite, continuing anyway ---"
+    echo "    The PR opened by cleanup() will be marked draft and require human test verification."
+  elif [[ "$review_result" == *"<review>CLEAN</review>"* ]]; then
     echo "--- Review: clean, continuing ---"
+  else
+    echo "--- Review: no recognized sentinel found, treating as clean and continuing ---"
   fi
 done
 

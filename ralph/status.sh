@@ -7,17 +7,23 @@
 # - You want a snapshot of which slice is in progress
 #
 # Usage:
-#   ./ralph/status.sh [prd-issue-number]
+#   ./ralph/status.sh [prd-issue-number] [max-iterations]
 #
-# If no argument given, defaults to 16 (Stage 1 PRD). Pass a different number
-# for a different PRD. The script auto-detects the sandbox name from the
-# current repo root, the same way afk-ralph.sh does.
+# Args:
+#   prd-issue-number   defaults to 16 (Stage 1 PRD)
+#   max-iterations     optional; if omitted, auto-detected from a running
+#                      afk-ralph.sh process via `ps -ef`. Used for the
+#                      "X done, Y in progress, Z remaining of N max" summary.
+#
+# The sandbox name is auto-detected — tries claude-<repo-basename> first,
+# then falls back to any running sandbox matching claude-DailyRiff*.
 #
 # Safe to run from anywhere (main checkout, worktree, or clone). Read-only.
 
 set -u
 
 PRD_ISSUE="${1:-16}"
+MAX_ITERATIONS_ARG="${2:-}"
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 REPO_BASENAME="$(basename "$REPO_ROOT")"
 BRANCH="ralph/prd-${PRD_ISSUE}"
@@ -47,10 +53,115 @@ else
   BOLD=""; DIM=""; GREEN=""; YELLOW=""; RED=""; CYAN=""; RESET=""
 fi
 
+# Auto-detect max-iterations from a running afk-ralph.sh process if the user
+# didn't pass one as the second argument. Uses ps to find the command line and
+# parses the second positional arg. Works under Git Bash on Windows because
+# `ps -ef` (ProcFS emulation) shows bash scripts with their args.
+MAX_ITERATIONS="${MAX_ITERATIONS_ARG}"
+if [[ -z "$MAX_ITERATIONS" ]]; then
+  afk_cmdline=$(ps -ef 2>/dev/null | grep -E '[a]fk-ralph\.sh' | head -1 || true)
+  if [[ -n "$afk_cmdline" ]]; then
+    # Extract the arguments after afk-ralph.sh. Expected: "... afk-ralph.sh <prd> <max>"
+    MAX_ITERATIONS=$(echo "$afk_cmdline" | grep -oE 'afk-ralph\.sh[[:space:]]+[0-9]+[[:space:]]+[0-9]+' \
+      | awk '{print $NF}' || true)
+  fi
+fi
+# If still unknown, leave as "?" for display.
+MAX_DISPLAY="${MAX_ITERATIONS:-?}"
+
+# Detect the workspace hosting the active sandbox (used for git log and git status).
+# `docker sandbox ls` prints: NAME AGENT STATE WORKSPACE (workspace may have spaces).
+afk_workspace=""
+if [[ -n "${SANDBOX_NAME}" ]]; then
+  afk_workspace=$(docker sandbox ls 2>/dev/null \
+    | awk -v sb="$SANDBOX_NAME" '$1 == sb {sub("^[^ ]+ +[^ ]+ +[^ ]+ +", ""); print}')
+fi
+
 echo "${BOLD}=== Ralph AFK status — PRD #${PRD_ISSUE} ===${RESET}"
 echo "  repo:    ${REPO}"
 echo "  sandbox: ${SANDBOX_NAME}"
 echo "  branch:  ${BRANCH}"
+echo "  max:     ${MAX_DISPLAY} iteration(s)"
+echo ""
+
+# ---- 0. Progress summary (iteration-by-iteration) --------------------------
+# Walk the commits on ralph/prd-<n> ahead of origin/master, in the active
+# workspace. Group review fix-up commits (message starts with "review:") with
+# the preceding main commit. Each main commit = one "done" iteration.
+done_count=0
+done_lines=()
+if [[ -n "$afk_workspace" && -d "$afk_workspace" ]]; then
+  if (cd "$afk_workspace" && git rev-parse --verify "$BRANCH" >/dev/null 2>&1); then
+    while IFS= read -r sha; do
+      [[ -z "$sha" ]] && continue
+      subj=$(cd "$afk_workspace" && git log -1 --format='%s' "$sha")
+      if [[ "$subj" != review:* ]]; then
+        done_count=$((done_count + 1))
+        short=$(cd "$afk_workspace" && git rev-parse --short "$sha")
+        # Look for "closes #N" or "#N" in the full commit message body,
+        # preferring the "closes #N" form. Fall back to any #N. Fall back
+        # to the commit subject if no issue reference found.
+        full=$(cd "$afk_workspace" && git log -1 --format='%B' "$sha")
+        closed_issue=$(echo "$full" | grep -oiE '(closes?|fix(es)?|resolves?)[[:space:]]+#[0-9]+' | grep -oE '#[0-9]+' | head -1)
+        if [[ -z "$closed_issue" ]]; then
+          closed_issue=$(echo "$full" | grep -oE '#[0-9]+' | head -1)
+        fi
+        if [[ -n "$closed_issue" ]]; then
+          label="closed ${closed_issue}"
+        else
+          # Trim subject to ~60 chars for a compact description.
+          label="\"${subj:0:60}\""
+        fi
+        done_lines+=("  ${GREEN}✓${RESET} Iteration ${done_count} DONE — ${label}, committed ${short}")
+      fi
+    done < <(cd "$afk_workspace" && git log --reverse --format='%H' "origin/master..${BRANCH}" 2>/dev/null)
+  fi
+fi
+
+# Detect in-progress iteration via uncommitted work in the AFK workspace.
+in_progress=0
+in_progress_area=""
+if [[ -n "$afk_workspace" && -d "$afk_workspace" ]]; then
+  dirty=$(cd "$afk_workspace" && git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$dirty" -gt 0 ]]; then
+    # If there's also a running claude process, iteration is actively in progress.
+    # If claude is gone but the tree is dirty, iteration stalled/crashed.
+    if docker sandbox exec "$SANDBOX_NAME" ps -eo comm 2>/dev/null | grep -q '^claude$'; then
+      in_progress=1
+      # Summarise the affected area (apps/web, apps/api, apps/mobile, packages/*).
+      in_progress_area=$(cd "$afk_workspace" && git status --porcelain 2>/dev/null \
+        | awk '{print $NF}' \
+        | grep -oE '^(apps|packages|supabase|docs|ralph)/[^/]+' \
+        | sort -u \
+        | paste -sd ',' -)
+      [[ -z "$in_progress_area" ]] && in_progress_area="files at repo root"
+    fi
+  fi
+fi
+
+# Compute remaining iterations of the max cap, if known.
+started=$(( done_count + in_progress ))
+if [[ "$MAX_ITERATIONS" =~ ^[0-9]+$ ]]; then
+  remaining=$(( MAX_ITERATIONS - started ))
+  (( remaining < 0 )) && remaining=0
+  summary_line="${BOLD}Progress:${RESET} ${done_count} done, ${in_progress} in progress, ${remaining} not-yet-started of ${MAX_ITERATIONS} max"
+else
+  summary_line="${BOLD}Progress:${RESET} ${done_count} done, ${in_progress} in progress (max iterations unknown — pass as 2nd arg)"
+fi
+
+echo "${BOLD}[0/5] ${summary_line}${RESET}"
+if [[ ${#done_lines[@]} -gt 0 ]]; then
+  for line in "${done_lines[@]}"; do
+    echo "$line"
+  done
+fi
+if [[ "$in_progress" -eq 1 ]]; then
+  next_n=$(( done_count + 1 ))
+  echo "  ${YELLOW}🔄${RESET} Iteration ${next_n} IN PROGRESS — ${in_progress_area} work continuing, commit pending"
+fi
+if [[ "$done_count" -eq 0 && "$in_progress" -eq 0 ]]; then
+  echo "  ${DIM}· no iterations started yet${RESET}"
+fi
 echo ""
 
 # ---- 1. Sandbox liveness ---------------------------------------------------
@@ -72,14 +183,6 @@ else
   echo "      (AFK run may be finished, crashed, or not started yet)"
 fi
 echo ""
-
-# Detect the workspace hosting the active sandbox (used by sections 2 and 3).
-# `docker sandbox ls` prints: NAME AGENT STATE WORKSPACE (workspace may have spaces).
-afk_workspace=""
-if [[ -n "${SANDBOX_NAME}" ]]; then
-  afk_workspace=$(docker sandbox ls 2>/dev/null \
-    | awk -v sb="$SANDBOX_NAME" '$1 == sb {sub("^[^ ]+ +[^ ]+ +[^ ]+ +", ""); print}')
-fi
 
 # ---- 2. Workspace file activity --------------------------------------------
 echo "${BOLD}[2/5] Workspace file activity${RESET}"

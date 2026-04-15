@@ -5,12 +5,55 @@ set -euo pipefail
 # Usage: ./ralph/afk-ralph.sh <prd-issue-number> [max-iterations]
 #
 # Runs inside a Docker sandbox for isolation.
+#
+# IMPORTANT: afk-ralph must NOT be run from a git worktree. Git worktrees use a
+# `.git` file that points to `<main-repo>/.git/worktrees/<name>`, a path that
+# does not exist inside the Docker sandbox (only the workspace directory is
+# mounted). Claude-in-the-sandbox then hits a broken git repo and has been
+# observed to `git init` a fresh orphan history to unblock itself — every
+# commit lands unreachable from master and is lost when the sandbox goes away.
+#
+# Always run afk-ralph from a standalone clone:
+#
+#   git clone https://github.com/<org>/<repo>.git ../<repo>-afk-run
+#   cd ../<repo>-afk-run
+#   ./ralph/afk-ralph.sh <prd-issue> [max-iterations]
+#
+# The script enforces this with a preflight check below.
 
 PRD_ISSUE="${1:?Usage: afk-ralph.sh <prd-issue-number> [max-iterations]}"
 MAX_ITERATIONS="${2:-20}"
 REPO="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 PRD_TITLE="$(gh issue view "$PRD_ISSUE" --repo "$REPO" --json title --jq '.title')"
+
+# Preflight: refuse to run from a git worktree. In a worktree, `.git` is a FILE
+# containing `gitdir: <main-repo>/.git/worktrees/<name>`. In a normal clone (or
+# the main repo itself), `.git` is a DIRECTORY. The Docker sandbox only mounts
+# the workspace, so a worktree's gitdir is unreachable from inside the sandbox.
+if [[ -f "${REPO_ROOT}/.git" ]]; then
+  cat >&2 <<ERRMSG
+ERROR: afk-ralph cannot run from a git worktree.
+
+  Detected: ${REPO_ROOT}/.git is a file (worktree marker), not a directory.
+
+The Docker sandbox mounts only the workspace directory, so the worktree's
+gitdir (outside the workspace) is unreachable from inside the sandbox.
+Claude-in-the-sandbox will hit a broken git repo and has been observed to
+\`git init\` a fresh orphan history — every commit lands unreachable from
+master and is lost when the sandbox is torn down.
+
+Run from a standalone clone instead:
+
+  git clone https://github.com/${REPO}.git ../$(basename "${REPO_ROOT}")-afk-run
+  cd ../$(basename "${REPO_ROOT}")-afk-run
+  ./ralph/afk-ralph.sh ${PRD_ISSUE} ${MAX_ITERATIONS}
+
+(ralph-once.sh is unaffected — it runs claude directly on the host and works
+fine from a worktree.)
+ERRMSG
+  exit 2
+fi
 
 # Detect default branch dynamically. Falls back to the current branch if the
 # remote default is empty (fresh repo with nothing pushed yet). This makes the

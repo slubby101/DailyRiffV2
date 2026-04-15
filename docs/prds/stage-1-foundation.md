@@ -246,8 +246,238 @@ Polymet's React+Vite+Tailwind+shadcn components port to Next App Router with min
 - **Expo Router** for navigation.
 - **Expo AV** for recording (chunked resumable uploads to R2 via presigned URLs).
 
+### Information hierarchy per persona
+
+For each persona's primary screen, the top-3 content priorities are committed here. This is NOT a wireframe — it's a content-priority decision. Implementation (Slices 6, 18, 20, 21, 22, 33) reads this to know what goes above the fold, what goes in the hero position, and what the user's first action should be. Every deviation from this hierarchy during implementation requires explicit approval.
+
+The rationale for each hierarchy is the real product loop — the user's actual question when they open the app — not Polymet's mocked layout (which was designed as a scaffold, not optimized for DailyRiff's pivot).
+
+#### Teacher dashboard (Slice 6 consumer via superadmin, but primarily Slice 21 / #38 for studio teacher)
+
+Opens in the morning before first lesson. Question: *"what do I need to do today, and is there anything I'm behind on?"*
+
+| Priority | Content | Why |
+|---|---|---|
+| **1st (hero)** | **Pending reviews queue** — realtime list of recordings awaiting feedback, with the oldest at top. Count badge in hero position. Primary CTA: "Review oldest." | This is the product's pivot. Auto-ack fires on upload; the teacher's whole value-add is the feedback step. If pending reviews isn't first, teachers forget to review and the loop collapses. Polymet leads with "upcoming lessons this week" — wrong for DailyRiff's model. |
+| **2nd** | **Today's lessons** — scheduled lessons for today in studio-local TZ, with attendance status + next lesson time. Inline "mark attendance" action. | Second because it's logistically urgent but doesn't define the product. A teacher who misses one day of review is fine; a teacher who misses a lesson is in trouble with a parent. |
+| **3rd** | **Overdue / outstanding payments summary** — count of students with balance >0 and oldest unpaid invoice age. Drill-in to full ledger. | Third because money matters but can wait till end of day. Teachers need to see it exists, not interrupt their morning with it. |
+
+Secondary (below fold, always visible on larger screens): streak summary across all students, upcoming assignments due this week, unread messages count.
+
+#### Parent dashboard (Slice 33 / #50)
+
+Opens in the evening after school. Question: *"did my kid practice today, and what do they need to do next?"*
+
+| Priority | Content | Why |
+|---|---|---|
+| **1st (hero)** | **Per-child streak + today's practice status** — for each child, a large streak count with "practiced today ✓" or "not yet today." If multi-child, a row per child. | The parent's core anxiety/joy is "are my kids keeping up." Making this the hero turns the dashboard into a reassurance device instead of a chore list. |
+| **2nd** | **Next assignment due** — per child, the soonest-due assignment with due date and a "view assignment" link. | Second because parents use it to nudge ("have you done this yet?"). Not first because the streak already answered the core question. |
+| **3rd** | **Next lesson reminder** — per child, date/time in studio-local TZ with "add to my calendar" link (.ics export). | Third because scheduling is logistical, not emotional. Always the same question ("when's the next one?"). |
+
+Secondary: outstanding balance (display-only in Stage 1, Stripe Connect in Stage 2+), unread messages from teacher, COPPA consent status + deletion schedule for under-13 children.
+
+#### Student web (13+) dashboard (Slice 20 / #37)
+
+Teen opens after school from homework break. Question: *"what do I need to practice, and can I just start?"*
+
+| Priority | Content | Why |
+|---|---|---|
+| **1st (hero)** | **Today's assignment + one-tap "Start recording" button** — the currently active assignment with pieces/techniques list and a large amber primary CTA that opens the recording flow directly. | The whole product reduces to "practice and hit record." Every other dashboard element is noise compared to the button. Teen friction tolerance is zero. |
+| **2nd** | **Streak + weekly minutes** — large display-xl streak count from `streak_service`, this week's total minutes in Fraunces display font. | Second because identity/motivation. A 14-year-old with a 47-day streak is a different person than a 14-year-old without one. The scale (`display-xl 64px` per DESIGN.md) matches the emotional weight. |
+| **3rd** | **Latest teacher feedback on a prior recording** — the most recent ack row with teacher feedback text, starred if rating ≥4. | Third because the loop closes here — the student did a thing, the teacher noticed, here's what the teacher said. Without this, the feedback loop is invisible to the student. |
+
+Secondary: assignments due this week (list), recording history (last 5), unread messages from teacher.
+
+**Explicit non-goal:** no payment info, no schedule-mgmt, no multi-child UI. Student sees their own data only.
+
+#### Student mobile (5-screen Expo — Slice 22 / #39)
+
+Kid opens on phone, often during practice setup. Question: *"start recording, now."* The whole dashboard screen is a launchpad for the record button.
+
+| Priority | Content | Why |
+|---|---|---|
+| **1st (hero)** | **Giant "Start recording" button** — fills the top ~40% of the screen, amber primary, keyboard-style tap target. Below it in small caption: the current assignment title. | On mobile, the record button IS the product. Every tap that isn't starting a recording is a tap the kid might give up on. Lead with action. |
+| **2nd** | **Streak count + day-of-week grid** — 7-day practice grid showing this week, today highlighted. Small display size (Fraunces display-md, ~40px). | Second because motivation. The 7-day grid is the most common "motivation at a glance" pattern for practice apps (Duolingo, Noom, etc.) — evidence-based and kids understand it instantly. |
+| **3rd** | **Next lesson reminder** — "Next lesson: Tue 4pm" compact row. | Third because it's the only logistical info the kid actually needs on mobile. Teachers and parents handle everything else. |
+
+The other 4 screens (`lessons`, `assignments`, `messages`, `profile`) are secondary surfaces. The dashboard is the launchpad; everything else is reference.
+
+#### DailyRiff superadmin dashboard (Slice 6 / #23)
+
+Rollin opens each morning. Question: *"is anything broken, and what needs my attention today?"*
+
+| Priority | Content | Why |
+|---|---|---|
+| **1st (hero)** | **Operational health strip** — green/yellow/red status for each pg_cron heartbeat and each `operational_alerts` row in the last 24h. BetterStack status mirror for web + api + deep health. | Silent system failures are the biggest risk to a solo-operator platform. The dashboard's first job is answering "did anything break overnight?" before anything else. |
+| **2nd** | **Waitlist + verification queue counts** — count of waitlist entries needing review + count of signups in verification queue >24h old. Both link to their queues. | Second because these are the daily operational tasks that pace studio growth. Q29 beta graduation gates depend on keeping this queue flowing. |
+| **3rd** | **Platform metrics strip** — 4 headline numbers: active studios (beta cohort flagged separately), total students, recordings uploaded in last 7d, new signups in last 7d. | Third because trend data isn't urgent but sets the "how are we doing overall" context. |
+
+Secondary: recent impersonation sessions log, recent `activity_logs` entries (expand to full page via deferred Slice), open `beta_feedback` entries.
+
+**Non-goals:** no billing metrics (no SaaS billing in Stage 1), no per-studio deep analytics (deferred), no real-time user map.
+
+#### Constraint: Fraunces display sizes where it matters
+
+All 5 dashboard heroes use `display-md` (40px) or `display-lg` (48px) Fraunces per DESIGN.md for the primary metric (pending review count, streak, kid's name, health status, studios count). This is deliberate — the PRD's generous type scale decision lives or dies at these five screens. If implementation defaults to 18px body for these numbers, the whole "editorial warmth" aesthetic collapses into generic SaaS.
+
+### Interaction state matrix
+
+For each of the five highest-stakes flows, every state the user can see is specified here. Empty states are features (per DESIGN.md § Aesthetic Direction). Error states name the problem, the consequence, and the action. Copy is illustrative — Slice 7 / #24 owns final voice review.
+
+#### Flow 1 — Student recording (Slice 11 / #28 web, Slice 22 / #39 mobile)
+
+The product pivot. Every state has to be intentional because this is where students spend their attention.
+
+| State | Trigger | What the user sees | Primary action | Copy example |
+|---|---|---|---|---|
+| **Idle** | Dashboard, no recording in progress | Large amber primary button, assignment title + due date above | Tap button to request mic | "Start practicing — Bach Invention 13" |
+| **Mic permission prompt** | First-ever tap on "start" | Browser/OS native permission dialog + in-app explainer card | Grant permission | "DailyRiff needs your mic to record practice. Nothing leaves your device until you're done." |
+| **Mic permission denied** | User clicks "Block" | Card with explainer + link to browser/OS settings + "Try again" button | Fix settings, retry | "Mic access is off. Open your browser settings → site permissions → microphone → allow dailyriff.com." |
+| **MIME negotiation failed** | Browser can't produce opus/mp4a/webm | Full-screen blocker | Upgrade browser | "Your browser can't record audio. Please use Chrome, Safari, or Firefox." |
+| **Recording** | Mic granted, recording started | Waveform + elapsed time counter (tabular-nums Geist) + pause/stop controls. Duration gate min marker at 5:00. | Pause or stop | "Recording — 03:42 / min 5:00" |
+| **Paused** | User pauses | Frozen waveform + resume/stop | Resume or stop | "Paused at 03:42" |
+| **Duration too short** | Stop tapped before 300s | Modal: "This practice was short" + "save anyway" / "keep practicing" buttons. Save anyway marks as draft, doesn't count as assignment completion. | Keep practicing (recommended) | "You practiced 03:42. DailyRiff counts sessions of 5 min or more. Keep going?" |
+| **Duration too long** | 60:00 hit | Auto-stop with modal: "60 min limit reached" + upload automatically starts | Watch upload | "You practiced the full 60 min. Uploading now." |
+| **Uploading** | Valid recording, upload started | Progress bar (chunked, resumable) + elapsed upload time + chunk count | Wait or cancel | "Uploading 1 of 8 chunks..." |
+| **Upload failed (retry)** | Network error mid-upload | Inline error card + auto-retry counter (5 attempts per PRD) | Wait or manual retry | "Upload paused — retrying in 12s (attempt 2 of 5). Your recording is safe on this device." |
+| **Upload failed (final)** | All 5 retries exhausted | Error card + "Save to device and retry later" button. Recording stays in mobile local cache (10-recording limit). | Retry later | "Upload failed after 5 tries. Your recording is saved on this device and will retry when you reconnect." |
+| **Upload offline** | `navigator.onLine === false` at stop | Card: "You're offline. We'll upload when you reconnect." + recording queued in local cache | Continue practicing | "Offline — your practice is saved and will sync when you're back online." |
+| **Uploaded, pending ack** | Upload complete, auto-ack trigger not yet fired (usually <1s) | Brief spinner with "Almost done..." | Wait | "Almost done..." |
+| **Acknowledged** | Trigger fired, ack row flipped | Success confirmation + celebration micro-animation (spring ease per DESIGN.md § Motion) + assignment marked done | Return to dashboard | "Practice submitted. Your teacher will review it." |
+| **Acknowledged with prior feedback** | Ack complete + teacher already left feedback on a recent recording | Same success + "See what your teacher said about Tuesday's practice" link | View feedback or return | "Nice work. Your teacher left a note on Tuesday's recording." |
+
+**Implementation note:** All transitions use DESIGN.md § Motion durations (short 150–250ms for state changes, medium 250–400ms for modals, long 400–700ms for the spring celebration on acknowledged). Waveform rendering is `<canvas>`; no library needed for the amplitude bars.
+
+#### Flow 2 — Teacher pending-reviews queue (Slice 11 / #28)
+
+The teacher side of the product pivot. Realtime subscription drives live updates; states reflect both queue volume and teacher action.
+
+| State | Trigger | What the teacher sees | Primary action | Copy example |
+|---|---|---|---|---|
+| **Zero pending (caught up)** | No unreviewed recordings | Empty state with warmth: Fraunces display-md "You're caught up" + illustration (subtle, no emoji, no confetti) + count of reviews completed this week | Browse students, check schedule | "You're caught up. 23 reviews this week — nice work." |
+| **1–10 pending (normal)** | Ack rows with status=acknowledged, teacher_feedback is null | Ordered list (oldest first), each row = student name + assignment title + recording duration + time since upload + waveform thumbnail + "Review" button | Click "Review" on oldest | (standard list rendering) |
+| **11+ pending (grouped)** | Large queue | Same list with a filter bar at top: by student, by assignment, by age. Default view still oldest-first. Filter persists in URL. | Filter or grind through | "12 pending — showing oldest first. Filter by student." |
+| **Stale pending (>48h)** | Ack row older than 48h without feedback | Row rendered with amber primary warning border (the one exception to "no colored borders" per DESIGN.md § sidebar nav note, explicitly extended here) + "2 days old" badge | Review urgently | "Bach Invention — Sarah — 2 days old" |
+| **New arrival (realtime)** | Supabase Realtime emits a new ack row event | New row slides in from top with amber glow per DESIGN.md § Motion ("the ONE moment the interface celebrates itself"). Toast optional: "New practice from Sarah." | Continue reviewing | "New practice from Sarah — 4:32" |
+| **Reviewing (in-progress)** | Teacher clicks "Review" on a row | Modal/split-pane with full waveform player + text feedback textarea + 1–5 rating selector. Side-nav previews next 3 in queue. | Submit feedback | (form UX) |
+| **Review submitted** | Feedback saved | Row removed from pending list with exit animation (ease-exit 250ms) + toast "Feedback sent to Sarah" | Auto-advance to next | "Feedback sent. 11 left." |
+| **Loading failure** | API error fetching queue | Inline error card + retry button + offline-mode indicator | Retry | "Couldn't load the queue. Check your connection and retry." |
+
+**Empty state is THE critical moment** — it's the teacher's reward for being on top of their studio. If we show "No results" SaaS slop, the teacher feels like they're using a CRM. If we show "You're caught up — 23 reviews this week," the teacher feels like they're doing their job well. Do NOT let implementation default to "No items found."
+
+#### Flow 3 — Student streak (Slice 20 / #37 web, Slice 22 / #39 mobile)
+
+Gamification lives or dies on specificity. `streak_service` port from Polymet's `PracticeStreakCalculator`.
+
+| State | Trigger | What the student sees | Primary action | Copy example |
+|---|---|---|---|---|
+| **Zero streak (first-time)** | No recordings ever uploaded | Large display-xl "0" in muted color + "Start your first streak today" prompt → record button | Start recording | "Ready for day 1?" |
+| **Active streak** | Practiced today | display-xl streak number in `--primary` (the studio's brand amber by default) + "days" label + today's tick in the 7-day grid (mobile) | See details, keep going | "47 days" |
+| **At-risk (practiced yesterday, not today)** | Last practice was yesterday, today is not yet recorded, local time after 6pm | display-xl number in `--primary` + amber warning row: "Don't lose your streak" + record CTA | Record before midnight | "Don't lose your 47-day streak — practice before midnight." |
+| **Grace window (streak-alive-if-practice-now)** | Same as at-risk, after 9pm | Same + urgency nudge | Record now | "1 hour left to save your streak." |
+| **Broken (48h+ since last practice)** | `streak_active === false` | display-xl current=0 + muted "Longest: 47 days" below in body-sm + "Start a new streak today" prompt | Record to restart | "New day 1 starts whenever you're ready." |
+| **Milestone (7d / 30d / 100d / 365d)** | Day count hit on today's recording | Celebration moment with spring motion per DESIGN.md § Motion + share-worthy visual (just a screenshot, no actual social share in Stage 1). Fires notification via Slice 23 / #40. | Continue | "30 days in a row. You're committing." |
+| **Streak frozen (pending-deletion child)** | Child is in COPPA 15-day grace | Streak displayed read-only, muted color, with banner above explaining | Parent cancels deletion | "Streak paused while account is pending deletion." |
+
+**Milestone copy rules:** Never "AMAZING!!!" Never emoji. Never "You rocked it!" Warm, specific, respectful of the student's actual effort. Fraunces display font for the number makes it feel weighty.
+
+#### Flow 4 — COPPA 15-day grace deletion (Slice 31 / #48)
+
+Legally fraught. Every state must be crystal clear and every action reversible until T-0.
+
+| State | Trigger | What the parent sees | Primary action | Copy example |
+|---|---|---|---|---|
+| **Normal** | Child account active, no deletion scheduled | Standard parent dashboard, no deletion UI surfaced | — | — |
+| **Delete-requested (confirmation)** | Parent clicks "delete my child's data" in child settings | Modal with full disclosure: what will be deleted, when (T+15 days), how to cancel. Typing "DELETE" to confirm. | Type "DELETE" to schedule, or cancel | "Permanently delete Sarah's account on 2026-04-30? This will remove all practice recordings, assignment history, and messages. You can cancel anytime before that date. Type DELETE to schedule." |
+| **Scheduled (grace period)** | `child.deletion_scheduled_at` is set | Top banner (not modal) on every parent + child page: "Sarah's data will be deleted on [date]. [Cancel deletion]" in destructive-tinted background at low opacity | Cancel anytime | "Sarah's data will be deleted on April 30. Cancel deletion" |
+| **T-7 reminder** | 7 days before deletion | Same banner + email sent via Postmark. Banner text updates with countdown. | Cancel or let expire | "Sarah's data will be deleted in 7 days. Cancel deletion" |
+| **T-1 final reminder** | 24 hours before deletion | Banner text: "Final notice — deletion happens in 24 hours" + email. Banner turns destructive color (not just tinted). | Cancel or let expire | "Final notice: Sarah's data will be deleted in 24 hours. Cancel now" |
+| **T-0 processing** | pg_cron fires | Brief banner: "Deleting..." + spinner. Usually <30s. | Wait | "Deleting Sarah's account..." |
+| **Deleted** | Hard-delete complete | Parent redirected to "account removed" confirmation page. Email sent. Audit row written to `coppa_deletion_log` with no PII. No way to see the child's old data — even in superadmin impersonation. | Navigate away | "Sarah's account has been permanently deleted. You will no longer see their data in DailyRiff. If you believe this was an error, email privacy@dailyriff.com." |
+| **Cancelled** | Parent clicks "cancel deletion" anytime T-15 → T-0 | Banner removed, `deletion_scheduled_at` cleared, toast confirmation | Resume normal use | "Deletion cancelled. Sarah's account is active." |
+| **Teacher view (pending-deletion badge)** | Teacher opens student with `pending_deletion=true` | Student row shows "pending deletion" badge (amber/destructive, not shouting) + date. Recording playback still allowed during grace per PRD § Q18. | Note and continue | "Pending deletion — April 30" |
+
+**Never**: no toast-only feedback on scheduling (too easy to misclick and miss), no hidden "are you sure" flows, no way to bypass the typed "DELETE" confirmation. The type-to-confirm is a deliberate speed bump because the action is irreversible after T-0.
+
+#### Flow 5 — Per-studio branding runtime (Slice 8 / #25 setup, affects every studio-tenant page)
+
+Every student and parent surface renders with the studio's chosen `--primary` color. First paint must not flash the default amber then swap to the studio's color.
+
+| State | Trigger | What the user sees | Implementation detail |
+|---|---|---|---|
+| **SSR render** | Any page load under `/studio/[slug]/*` route group | Server-side layout reads `studios.primary_color` + `studios.display_name` + `studios.logo_url` and injects `<style>` with the override BEFORE any HTML body. No flash. | `apps/web/src/app/(studio)/[slug]/layout.tsx` reads from cache via server component, injects `<style>:root { --primary: ${hsl}; --ring: ${hsl}; }</style>` in the `<head>`. |
+| **Logo loading** | `studios.logo_url` is set | `next/image` with `priority` flag on the studio layout header + placeholder color matching the studio primary | Shadcn `Skeleton` with primary background at 10% opacity while loading |
+| **Logo missing / broken** | `studios.logo_url` is null, or R2 returns 404 | Fallback: display_name in Fraunces display-sm (32px) as a text-logo | No broken-image icon ever |
+| **Color update (live)** | Studio owner changes color in settings | Optimistic update + `router.refresh()` + toast. Student/parent layouts re-render on next navigation. No WebSocket push — color changes are rare enough that next-nav is fine. | — |
+| **DailyRiff default** | Non-studio routes (marketing, superadmin, onboarding pre-signup) | Default amber `hsl(30 85% 48%)` per DESIGN.md | — |
+| **Contrast violation (theoretical)** | Studio picked a color outside the 12-swatch palette (shouldn't happen, but defend) | Server-side validation rejects; admin alert | `platform_settings` contains the allowlist of 12 Radix hex values; any other value fails validation at the API layer |
+
+**The 12-swatch allowlist is enforced at the database + API layer, not the UI.** Even if a malicious client bypasses the picker, the backend rejects any `primary_color` not in the allowlist. This is the defense against both mistakes and contrast-regression attacks.
+
+#### Superadmin distinct color
+
+The superadmin surface does NOT use the default DailyRiff amber. It uses **deep teal `hsl(180 60% 35%)`** (`--chart-2` from DESIGN.md). Rationale: during impersonation, Rollin needs instant visual confirmation of "I'm in operator mode" vs "I'm inside Studio X's branded mode." The distinct color also builds muscle memory that superadmin surfaces are high-stakes (impersonation, platform settings, secret rotation) and not the studio-facing product.
+
+Implementation: superadmin route group at `apps/web/src/app/(superadmin)/layout.tsx` injects `<style>:root { --primary: 180 60% 35%; --ring: 180 60% 35%; }</style>` server-side, overriding the default. Superadmin pages never inherit a studio's `--primary` (no per-tenant theming on operator surfaces).
+
+#### Marketing homepage visual policy
+
+**No hero image in Stage 1.** The marketing homepage hero is pure Fraunces typography + warm neutrals + a single well-placed primary CTA. No stock photos (blacklist). No custom illustration (budget). No abstract blobs (slop). The brand voice IS the image.
+
+Rationale: the three alternatives each fail. Stock photos scream generic edtech and hit the DESIGN.md blacklist. Custom illustration is $1–3k + lead time + risk of generic-edtech-illustrator output. Abstract composition via AI risks the same slop we codified against.
+
+The deliberate quiet is also a differentiation signal. Every competitor uses a cheerful stock photo of a smiling child at a piano. DailyRiff doesn't. That alone sets a tone.
+
+Revisit post-launch once real studios are using the product and we can use actual (permissioned) studio photography with real teachers and students. Stage 2 decision, not Stage 1.
+
+#### Dark mode defaults per persona
+
+Dark mode is user-toggleable everywhere via `next-themes` (web) and Expo's appearance API (mobile). But the default at first login differs by persona:
+
+| Persona | Default | Rationale |
+|---|---|---|
+| **Student web (13+)** | Light | Web users are sometimes parents of under-13 looking at their kid's dashboard during the day. Light is safer default. Toggleable. |
+| **Student mobile (Expo)** | **Dark** | Teens practice in evenings and at night. Mobile screens at night in light mode are harsh. Toggleable. |
+| **Parent web** | Light | Daytime schedule/admin context. Toggleable. |
+| **Teacher web** | Light | Dashboards are data-dense; light is easier for table scanning. Toggleable. |
+| **Superadmin web** | Light | Operator surface; parity with teacher. Toggleable. |
+| **Marketing + legal** | Light | First impression is brand-defining; warm neutrals + amber read best on light. Respects `prefers-color-scheme` though — if visitor's OS is dark, marketing loads dark. |
+
+Dark mode toggle persists per-user in the user settings row (new column `users.theme_preference` enum {'light','dark','system'} default 'system' for non-student-mobile, default 'dark' for student-mobile).
+
+### Emotional moments
+
+Five moments where design weight matters more than feature completeness. Implementation must preserve these, not flatten them into generic UI. Each is a named product moment — not decoration, not polish, part of the functional spec.
+
+| # | Moment | Persona | What they feel | What implementation must preserve |
+|---|---|---|---|---|
+| 1 | **First record button tap** | Student (mobile especially) | Scary + excited. First time producing visible evidence of practice. | The "Start recording" button is the largest single UI element on the dashboard, in `--primary`, with keyboard-scale tap target. Mic-permission dialog has a plain-language explainer card, not just the browser default. The transition from permission-granted to recording-started is immediate — no interstitial, no toast, straight to the waveform. |
+| 2 | **"You're caught up"** | Teacher | Pride + relief. The reward for keeping up with the studio. | Empty state uses Fraunces display-md, warm language ("You're caught up. 23 reviews this week — nice work."), never "No items found." Review count is real and tabular-nums. This is the moment the PRD most strongly refuses generic SaaS defaults. |
+| 3 | **First 7-day streak milestone** | Student | "I'm actually doing this." The first concrete proof of commitment. | Spring ease motion (DESIGN.md § Motion) fires once, then never again until the 30-day milestone. Notification sent via Slice 23 / #40. Copy respects the achievement ("7 days in a row. You're committing.") — never cartoonish, never emoji, never exclamation marks. Fraunces display-xl on the streak number is non-negotiable. |
+| 4 | **COPPA delete confirmation** | Parent | Gravity. Final decision about their child's data. | Type-to-confirm speed bump (must type "DELETE") is non-negotiable even if it adds a step. Copy names the exact date, what will be deleted, and the cancel window. No toast-only feedback, no "one-click undo," no A/B test of removing the typed confirmation. The friction is the feature. |
+| 5 | **Studio color flows through** | Studio owner | "My studio. My product." Proof DailyRiff isn't generic. | During onboarding (Slice 8 / #25), after the studio owner picks a color from the 12-swatch palette, the **next screen renders in that color** — not a preview, not a modal confirmation, the actual next step of onboarding uses the studio's `--primary`. Server-side SSR injection so there's no flash. This is the single moment that differentiates DailyRiff from generic edtech SaaS in the first 5 minutes of use. |
+
+These are **functional requirements**, not design polish. A slice that ships with the interaction working but the emotional moment flattened (generic empty state, no spring ease, toast-only confirmation, preview-instead-of-live color) has not met acceptance criteria.
+
+### Responsive commitments per persona
+
+Per-persona responsive policy. Breakpoints match DESIGN.md § Layout (sm 640, md 768, lg 1024, xl 1280, 2xl 1536). "Desktop-first" in the PRD never means "broken on mobile" — it means what's committed below.
+
+| Persona | Mobile (<lg) policy | Rationale |
+|---|---|---|
+| **Teacher** | **Pending-reviews queue must work fully on mobile.** Audio playback, feedback textarea, 1–5 rating selector, realtime updates, and the "review oldest" CTA are first-class on mobile. Everything else (payment ledger, lesson editor, student detail tables, studio profile) renders as single-column stacks that are *usable* (no clipping, scroll works, forms submit) but not *optimized*. No mobile-specific layouts or gestures for non-pivot surfaces. | Teachers will review recordings on phones during evenings and weekends. The product pivot has to work there. Everything else can wait for desktop because teachers do their business ops at a desk. |
+| **Superadmin** | **Operational health strip must work on mobile.** The "is anything broken overnight" view (Slice 6 / #23 hero) is reachable and readable on a phone. Every other superadmin page (studios list, user detail, impersonation, platform settings, verification queue, waitlist, employees) is desktop-required — mobile shows a banner: "This page needs a larger screen. Switch to desktop to continue." | Rollin will check health from phone (possibly at 2am, woken by BetterStack). All other ops work is deliberate and belongs at a desk. Not every page needs to be responsive. |
+| **Parent** | **Mobile-first.** Every parent page fully responsive through all breakpoints. | Parents check throughout the day from phones. The dashboard, schedule view, messages, and COPPA delete flow are all equally important on mobile. |
+| **Student web (13+)** | **Mobile-first.** Record flow, streak display, assignments, messages all fully responsive. | Teens open on phones and laptops roughly equally. Record flow especially needs mobile-web parity because the Expo app is the preferred path but web must work if mic permission grants. |
+| **Student mobile (Expo)** | **Phone-only.** Tablet rendering is acceptable but untested in Stage 1. | The 5-screen Expo app is a focused mobile experience by definition. |
+| **Marketing / legal / public** | **Mobile-first.** Marketing homepage, about, contact, privacy, ToS, accessibility all fully responsive. Hero composition may change at breakpoints but brand+headline+CTA must be legible and actionable at every size. | Visitor traffic is >50% mobile; conversion depends on mobile-first design. |
+| **Studio onboarding (Q14a)** | **Desktop-first, tolerant mobile.** Primary flow designed for desktop; mobile renders single-column stacks that complete the flow but don't fight it. Logo upload allowed on mobile via `capture="environment"` file input. | Studio owners sign up deliberately at a desk. Mobile fallback exists for the rare phone-only signup. |
+
+**Enforcement:** Slice 18 / #35 Playwright smoke matrix runs Chromium+Firefox+WebKit at a mobile viewport (iPhone 14 Pro, 393×852) AND a desktop viewport (1440×900) for every persona's primary flow. A failure at either viewport blocks merge.
+
 ### Cross-cutting Stage 1 principles
 
+- **Design system enforcement**: every UI slice's acceptance criteria implicitly include `docs/DESIGN.md` § Aesthetic Direction / Anti-slop rules. Reviewers reject PRs that ship any blacklist pattern. The 10 hard-reject patterns are: (1) purple/violet/indigo gradients, (2) 3-column icon-in-colored-circle feature grids, (3) centered-everything with uniform spacing, (4) uniform bubbly border-radius on every element, (5) decorative blobs / floating SVG confetti / wavy dividers, (6) emoji as design elements, (7) colored left-border on cards (exception: active sidebar nav items only), (8) generic hero copy patterns ("Welcome to DailyRiff," "Unlock the power of," "Your all-in-one"), (9) cookie-cutter section rhythm (hero → 3 features → testimonials → pricing → CTA), (10) stock photos of smiling children at pianos. Slice 7 / #24 (marketing homepage) is the highest-risk surface because shadcn homepage starters default to pattern #2 — extra review scrutiny there.
 - **Platform-settings principle (Q24)**: every tunable knob is in `platform_settings`, editable from the superadmin UI with 30-sec TTL cache. Exception: vendor-owned values are read-only mirrors.
 - **Expand-then-contract migrations (Q19.2)**: every migration must be safe to run *before* the new API code deploys. Forward-fix only; no `alembic downgrade` in prod.
 - **Audit trail first**: impersonation, platform-settings edits, secret rotations, COPPA deletions, R2 deletes, MFA events all write to `activity_logs` before anything else.

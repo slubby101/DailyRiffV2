@@ -71,6 +71,18 @@ All fonts loaded from Google Fonts. Self-hosted copies committed to `apps/web/pu
 
 Use `font-display: swap` to prevent invisible-text flash. Self-host in production; fall back to CDN in development. `next/font/google` handles this automatically in `apps/web`.
 
+### Fallback stacks (if Google Fonts / self-hosted fail)
+
+```css
+--font-display: "Fraunces", Georgia, "Times New Roman", serif;
+--font-body:    "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+--font-mono:    "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+```
+
+Fraunces falls back to Georgia — serif-to-serif preserves editorial tone. Never fall back from serif to sans; the warmth collapses. Geist falls back to the system font stack — interfaces stay literate. Geist Mono falls back to the standard mono stack.
+
+If Google Fonts is blocked (corporate networks, CSP, ad blockers), self-hosted copies in `apps/web/public/fonts/` are the primary path; the CDN is a fallback. Stage 1 ships with both paths wired; decide at CI time which is canonical based on performance measurement.
+
 ### Scale
 
 Modular scale, 1.25 ratio, base 16px. Fraunces for `display-*` and `h1`/`h2`, Geist for everything else.

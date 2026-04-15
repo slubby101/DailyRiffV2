@@ -475,6 +475,135 @@ Per-persona responsive policy. Breakpoints match DESIGN.md § Layout (sm 640, md
 
 **Enforcement:** Slice 18 / #35 Playwright smoke matrix runs Chromium+Firefox+WebKit at a mobile viewport (iPhone 14 Pro, 393×852) AND a desktop viewport (1440×900) for every persona's primary flow. A failure at either viewport blocks merge.
 
+### Engineering commitments (from `/plan-eng-review`)
+
+#### Recording upload — R2 multipart semantics (F2)
+
+"Chunked resumable upload" means **R2 S3-compatible multipart upload**, not one presigned PUT. Three-step flow:
+
+1. `POST /recordings/upload-initiate` — client sends `{assignment_id, duration_seconds_estimate, mime_type}`. Server mints a multipart upload_id via R2, returns `{upload_id, part_urls: [presigned for parts 1..N], chunk_size_bytes}`. Creates a row in new `recordings_uploading` table tracking upload state.
+2. Client uploads parts in parallel (up to 3 concurrent), each to its presigned part URL. On any failure, `POST /recordings/upload-part-retry {upload_id, part_number}` mints a new presigned URL for that specific part. Max 5 retries per part before hard failure.
+3. `POST /recordings/upload-complete {upload_id, parts: [{number, etag}]}` — server finalizes the multipart upload against R2, writes the final row to `recordings` with `uploaded_at = now()`, deletes the row from `recordings_uploading`. The `auto_acknowledge_assignment` trigger fires at this point.
+
+**Constants:** chunk size 10 MB, max 60 parts (600 MB absolute ceiling, well above 60-min AAC), 5-min TTL per part URL. Concurrency 3 parts in flight at once.
+
+**New table `recordings_uploading`:** `{upload_id, student_id, assignment_id, mime_type, started_at, last_activity_at, parts_uploaded int, parts_total int, status enum(in_progress, failed, completed)}`. Garbage-collected by `pg_cron` after 24h of inactivity; R2 multipart aborted via `AbortMultipartUpload` API.
+
+**Mobile offline cache:** when `navigator.onLine === false` or first part upload fails, recording stays in the Expo mobile local cache (10-recording limit per Polymet constraint). On reconnect, the mobile client resumes by calling `upload-initiate` fresh (existing upload_ids are allowed to be abandoned — R2 multipart cleanup handles the orphaned parts).
+
+#### `auto_acknowledge_assignment` trigger — disambiguation (F1)
+
+Polymet's trigger assumed one active assignment per student. Stage 1 supports multiple concurrent active assignments. Resolution: **the recording row carries an explicit `assignment_id` FK set at `upload-initiate` time**. The student picks which assignment this practice is for BEFORE recording starts (default = soonest-due active assignment). The trigger flips **only the one ack row** matching `(assignment_id, student_id, recording_id)`.
+
+UI implication for Slice 11 / #28: student-facing record button is always scoped to an explicit assignment. If a student has multiple active assignments, the dashboard shows them a picker before the mic-permission step. Default selection: soonest due. Override affordance: "Practicing something else? Pick an assignment." Only 1 click to start recording the default case.
+
+Trigger idempotency: if the trigger fires twice for the same `recording_id` (e.g., a fast retry write), the second call is a no-op because the ack row is already `acknowledged`. No concurrency hazard.
+
+#### Notification fan-out — queue pattern (F3)
+
+`NotificationService.send()` has two entry paths:
+
+- **Synchronous path** (direct FastAPI handlers) — when a notification is a direct consequence of a user action (teacher sends a message, student submits a recording). Sends immediately via `httpx.AsyncClient` fan-out. Existing Stage 0 pattern preserved.
+- **Queue path** (pg_cron-originated events) — when a notification is triggered by a time-based event (lesson reminder, streak milestone fired by cron, weekly digest). Inserts a row into `notifications_pending`. A new `notifications_drain` pg_cron job runs every 10 seconds, selects up to `platform_settings.notifications_drain_batch_size` (default 20) rows in `notifications_pending` with `status=pending`, dispatches via `NotificationService.send()`, marks rows `status=sent` or `status=failed` with retry count.
+
+Max retries on the queue path: 3 per notification (exponential backoff — 1min, 5min, 30min). After 3 failures, row marked `status=failed` and written to `activity_logs` with the error. No silent drops.
+
+New table **`notifications_pending`:** `{id bigserial, user_id, event_type, payload jsonb, scheduled_for timestamptz, status enum(pending, sending, sent, failed), attempt_count int default 0, last_attempt_at, last_error text, created_at}`. Indexed on `(status, scheduled_for)` for drain efficiency.
+
+#### Supabase Realtime subscription quota + fallback (F4)
+
+Supabase Pro tier Realtime quota: 200 concurrent connections. At beta scale (5 studios × 20 students × 2 devices × teacher + parent) this could exceed quota. Mitigation:
+
+- **Subscription consolidation:** one Realtime channel per user (`user:{user_id}`), not per resource. All events for a user (messages, pending-review updates, notification pushes) multiplexed via a `type` field in the payload. `realtime_service.py` on the backend fans out internally.
+- **Quota monitoring:** Supabase built-in alert at 80% of connection quota → P1 alert per Q27 observability. Also exposed on the superadmin platform-settings page as a read-only metric.
+- **Polling fallback:** if a client's Realtime subscription fails (`realtime.connect()` returns error or `channel.state === 'closed'` for >30s), the client falls back to polling via TanStack Query with a 30-second `refetchInterval`. This preserves functionality at the cost of latency. The fallback is automatic and transparent to the user.
+
+This adds a new `realtime_service.py` module (server-side multiplexing) and a `useRealtimeWithPollingFallback` hook (client-side).
+
+#### Alembic migration ordering across parallel slices (F5)
+
+Linear Alembic revision IDs cause guaranteed merge conflicts when 25+ slices add migrations in parallel. Resolution:
+
+- **Timestamp-prefixed filenames:** `alembic/versions/20260415_1432_studios.py` instead of `0002_studios.py`. Alembic supports any filename as long as the `revision` / `down_revision` IDs inside link correctly.
+- **`down_revision` always points to `head` at branch-cut time.** The first slice to merge after `head` moves rebases its migration against the new head. The second slice does the same. If two slices merge in parallel, git marks a conflict on `alembic/versions/` — the second-to-merge PR rebases.
+- **`alembic merge` for genuine branching:** if two migrations genuinely must coexist (unusual), use `alembic merge -m "merge_slices_X_Y"` to produce a merge migration. This is the Alembic-sanctioned pattern.
+- **CI check:** pre-merge, CI runs `alembic check` which fails if there are multiple heads. Forces the second-to-merge PR to produce a merge migration or rebase. New CI step in the `api` job.
+
+This is a Stage 0 infrastructure concern Stage 1 exposes at scale. Rollin owns this — don't let a slice author miss it.
+
+#### `packages/api-client` codegen conflict resolution (F6)
+
+Same problem as F5 for `openapi.snapshot.json`. Resolution:
+
+- Developers **never** hand-edit `openapi.snapshot.json` or `packages/api-client/src/types.gen.ts`.
+- CI `api` job regenerates the snapshot on every PR. If `git diff --exit-code apps/api/openapi.snapshot.json` fails, CI commits the regenerated snapshot via bot and re-runs codegen job.
+- Merge conflicts on the snapshot: the second-to-merge PR rebases and regenerates in one step (`pnpm --filter api regenerate-openapi && pnpm --filter api-client generate && git add apps/api/openapi.snapshot.json packages/api-client/src/`).
+- CI fails if `packages/api-client/src/types.gen.ts` is hand-edited (diff-detectable since it's auto-generated).
+
+Applies to Slice 18 / #35 CI upgrades.
+
+#### RLS regression testing meta-coverage (F7)
+
+Stage 1 adds 15+ tenant-scoped tables. A new table can ship without RLS coverage. Resolution:
+
+- New meta-test `apps/api/tests/integration/test_rls_coverage.py` runs two introspections:
+  1. `SELECT table_name FROM information_schema.columns WHERE column_name = 'studio_id'` → list of tenant-scoped tables
+  2. `SELECT tablename FROM pg_policies` → list of tables with at least one RLS policy
+- Asserts every tenant-scoped table has an RLS policy AND a corresponding test function in `test_rls_isolation.py` (detected via test name pattern `test_rls_isolation_{table_name}`).
+- Fails CI if any tenant-scoped table is missing either.
+- New tables that should NOT be tenant-scoped (platform-level tables like `waitlist_entries`, `dailyriff_employees`, `platform_settings`) are explicitly listed in an `RLS_EXEMPT_TABLES` constant in the meta-test.
+
+This is the Stage 1 analog of Stage 0's single `test_rls_isolation.py`. Applies to Slice 3 / #20 (studios — first tenant-scoped table, sets the pattern).
+
+#### COPPA deletion cascade (F8)
+
+When a child account hard-deletes at T-0, `ack.teacher_feedback` referencing the deleted `recording_id` must cascade. Schema constraint:
+
+- `assignment_acknowledgements.recording_id` FK: `ON DELETE CASCADE`
+- `recordings.student_id` FK: `ON DELETE CASCADE`
+- `parents.children[]` junction: `ON DELETE CASCADE`
+- `messages.sender_id` / `messages.recipient_id` FK: `ON DELETE CASCADE` (when sender or recipient is the deleted child)
+
+Feedback text is lost at T-0. This is correct under COPPA — the feedback is derived child data and must be deleted. Audit row in `coppa_deletion_log` records counts of all cascade-deleted rows for forensic purposes (no PII, just `{db_rows_count, r2_objects_count}`).
+
+Applies to Slice 31 / #48.
+
+#### Impersonation idle timeout (F9)
+
+Superadmin sessions: 8h max / 1h idle. Impersonation sessions within a superadmin session: **15min idle timeout**, independent of the outer session. After 15 min idle, the impersonation session ends automatically via `pg_cron` sweep + client-side ping check; the outer superadmin session continues.
+
+Rationale: impersonation is the highest-stakes operator action (temporary god-mode against another user's data). Lower idle timeout is friction Rollin should welcome.
+
+Applies to Slice 30 / #47.
+
+#### Expo push token rotation (F10)
+
+Same pattern as WebPush 410-gone but for Expo push:
+- When Expo Push Service returns `DeviceNotRegistered` in the receipts API, `NotificationService` deletes the row from `user_push_subscriptions` (matching `channel='expo'` and `token=<rotated token>`)
+- Tested explicitly with a mocked Expo response in `test_notification_service.py`
+
+Applies to Slices 13 / #30 (messaging wires notifications) and 23 / #40 (notification extension).
+
+#### Graceful degradation policy per dependency (F11)
+
+When a dependency is down, the product must fail in a predictable, user-visible way — not hang, not silently drop data, not succeed-but-lose-state. Committed policy per dependency:
+
+| Dependency | Failure mode | User-facing behavior | Retry strategy | Alerting |
+|---|---|---|---|---|
+| **Supabase GoTrue** (auth) | Slow / down | Login form shows "Sign-in is taking longer than usual — retrying..." after 3s; hard fail after 15s with "Sign-in service is unavailable. Try again in a minute." | 3 retries with exponential backoff | Sentry error rate alert per Q27 |
+| **Supabase Postgres** | Slow / down | API returns 503 with `Retry-After: 30`; web UI shows "DailyRiff is temporarily unavailable. We're on it." banner | No client retry (the DB is authoritative) | BetterStack P0 |
+| **Supabase Realtime** | Slow / down | Client falls back to polling (F4 above) automatically, no user-visible degradation | 30s poll interval | Supabase quota + subscription failure alerts |
+| **R2 (presign)** | Slow / down | Recording upload flow shows "Upload service is unavailable. Your recording is saved locally and will upload when service returns." Local cache preserved on mobile. | 5 retries over 5 minutes | Cloudflare dashboard + Sentry |
+| **R2 (playback)** | Slow / down | Recording playback shows "Playback unavailable — try again." No fallback (no local cached playback). | 3 retries automatic + manual retry button | Cloudflare dashboard |
+| **Postmark** | Slow / down | Email dispatch rows marked `status=failed` with error, retried via notifications_pending queue. User-facing flows (onboarding, COPPA) proceed and show a banner: "We couldn't email [X]. Check your inbox or contact support." | 3 retries over 30 minutes | Postmark webhook + P0 on bounce rate >5% |
+| **Expo Push** | Slow / down | Push notification rows marked failed in queue. In-app banner surfaces at next login. Non-critical — user experience degraded but loop continues. | 3 retries | Queue drain rate monitoring |
+| **Stripe** (COPPA VPC) | Slow / down | VPC charge flow shows "Payment service is unavailable — please use the signed-form escape hatch." The escape hatch is the fallback. | No retry | Stripe webhook delivery monitoring |
+| **Stripe webhook** | Replay / duplicate | `idempotency_log` catches duplicates silently. User sees no effect. | — | Stripe dashboard alerts |
+| **hCaptcha** | Slow / down | Public forms (waitlist, signup) show "Verification is unavailable — please try again in a moment." Hard-block signup attempts. | Manual retry only | Sentry error rate |
+| **pg_cron** (silent failure) | Scheduler broken | Heartbeat (`operational_alerts`) detects missing writes and alerts via BetterStack P1 after 20 min | — | BetterStack heartbeat uplink |
+
+**Rule:** every user-facing error message names the problem, the consequence, and the action (matches DESIGN.md voice rule). Never "Something went wrong."
+
 ### Cross-cutting Stage 1 principles
 
 - **Design system enforcement**: every UI slice's acceptance criteria implicitly include `docs/DESIGN.md` § Aesthetic Direction / Anti-slop rules. Reviewers reject PRs that ship any blacklist pattern. The 10 hard-reject patterns are: (1) purple/violet/indigo gradients, (2) 3-column icon-in-colored-circle feature grids, (3) centered-everything with uniform spacing, (4) uniform bubbly border-radius on every element, (5) decorative blobs / floating SVG confetti / wavy dividers, (6) emoji as design elements, (7) colored left-border on cards (exception: active sidebar nav items only), (8) generic hero copy patterns ("Welcome to DailyRiff," "Unlock the power of," "Your all-in-one"), (9) cookie-cutter section rhythm (hero → 3 features → testimonials → pricing → CTA), (10) stock photos of smiling children at pianos. Slice 7 / #24 (marketing homepage) is the highest-risk surface because shadcn homepage starters default to pattern #2 — extra review scrutiny there.

@@ -109,3 +109,7 @@ changelog.
 ### 2026-04-16 UTC / iteration #15 of PRD #16 / closed #74
 - **Decision:** Added Alembic migration 0015 with two SQL cleanup functions (`cleanup_mfa_failure_log` deletes >30d, `cleanup_idempotency_log` deletes >90d) + pg_cron daily schedules at 03:00 UTC. Functions return deletion count so they're callable independently of pg_cron (via `retention_service.py` wrapper). Seeded two `platform_settings` rows (`retention_mfa_failure_log_days`, `retention_idempotency_log_days`) for superadmin visibility — the SQL functions use hardcoded intervals for now; making them read from platform_settings would add complexity with minimal benefit since changing retention requires re-deploying the function anyway.
 - **Next:** Remaining unblocked: #37, #39, #43, #44, #45, #46, #47, #48, #49, #73, #75.
+
+### 2026-04-16 UTC / iteration #16 of PRD #16 / closed #73
+- **Decision:** Switched slowapi storage from hardcoded `memory://` to `_resolve_storage_uri()` which reads `REDIS_URL` env var. Falls back to `memory://` when env var is unset or empty. Added `redis>=5.0` to dependencies. `REDIS_URL` was already in `.env.example` from Stage 0. No API surface change — purely internal storage backend swap. Module-level `limiter` and `create_limiter()` both call the resolver at import/call time.
+- **Next:** Remaining unblocked: #37, #39, #43, #44, #45, #46, #47, #48, #49, #75.

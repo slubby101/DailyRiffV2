@@ -102,15 +102,15 @@ def upgrade() -> None:
         INSERT INTO notification_templates
             (event_type, category, persona, title_template, body_template, channels, trigger_source)
         VALUES
-            ('beta.welcome', 'beta_onboarding', 'owner',
+            ('beta.welcome', 'beta_onboarding', 'teacher',
              'Welcome to the DailyRiff Beta!',
              'Hi {owner_name}, your studio {studio_name} has been accepted into the DailyRiff beta program. We''re excited to have you on board!',
              '["web_push"]'::jsonb, 'fastapi_handler'),
-            ('beta.getting_started', 'beta_onboarding', 'owner',
+            ('beta.getting_started', 'beta_onboarding', 'teacher',
              'Getting started with DailyRiff',
              'Hi {owner_name}, here are some tips to get the most out of your DailyRiff beta experience: invite your teachers, set up your studio profile, and create your first assignment.',
              '["web_push"]'::jsonb, 'fastapi_handler'),
-            ('beta.feedback_reminder', 'beta_onboarding', 'owner',
+            ('beta.feedback_reminder', 'beta_onboarding', 'teacher',
              'How''s your DailyRiff experience?',
              'Hi {owner_name}, we''d love to hear your feedback on DailyRiff. Submit feedback from your studio dashboard or contact us at support@dailyriff.com.',
              '["web_push"]'::jsonb, 'fastapi_handler')

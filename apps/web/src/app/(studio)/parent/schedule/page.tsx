@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
@@ -25,6 +26,14 @@ function useChildSchedule(childId: string) {
 }
 
 export default function ParentSchedulePage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>
+      <ParentScheduleContent />
+    </Suspense>
+  );
+}
+
+function ParentScheduleContent() {
   const searchParams = useSearchParams();
   const childId = searchParams.get("child") ?? "";
 

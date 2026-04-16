@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
@@ -53,6 +54,14 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
 }
 
 export default function ParentPaymentsPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>
+      <ParentPaymentsContent />
+    </Suspense>
+  );
+}
+
+function ParentPaymentsContent() {
   const searchParams = useSearchParams();
   const childId = searchParams.get("child") ?? "";
 

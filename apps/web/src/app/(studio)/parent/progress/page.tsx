@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
@@ -40,6 +41,14 @@ function formatDuration(seconds: number): string {
 }
 
 export default function ParentProgressPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading...</div>}>
+      <ParentProgressContent />
+    </Suspense>
+  );
+}
+
+function ParentProgressContent() {
   const searchParams = useSearchParams();
   const childId = searchParams.get("child") ?? "";
 

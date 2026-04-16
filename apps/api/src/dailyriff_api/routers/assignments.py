@@ -12,7 +12,7 @@ from dailyriff_api.auth import (
     CurrentUser,
     get_current_user,
 )
-from dailyriff_api.db import rls_transaction
+from dailyriff_api.db import rls_transaction, service_transaction
 from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.assignment import (
     AcknowledgementResponse,
@@ -58,6 +58,18 @@ async def create_assignment(
     body: AssignmentCreateRequest,
     user: CurrentUser = Depends(get_current_user),
 ) -> AssignmentResponse:
+    async with service_transaction() as conn:
+        membership = await conn.fetchrow(
+            "SELECT role FROM studio_members WHERE studio_id = $1 AND user_id = $2",
+            body.studio_id,
+            user.id,
+        )
+        if membership is None or membership["role"] not in ("owner", "teacher"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only teachers and studio owners can create assignments",
+            )
+
     errors = AssignmentValidator.validate(
         studio_id=body.studio_id,
         teacher_id=user.id,

@@ -93,6 +93,19 @@ async def create_recording(
         ) from e
 
     async with rls_transaction(user.id) as conn:
+        if body.assignment_id is not None:
+            assignment = await conn.fetchrow(
+                "SELECT id FROM assignments WHERE id = $1 AND student_id = $2 AND studio_id = $3",
+                body.assignment_id,
+                user.id,
+                body.studio_id,
+            )
+            if assignment is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Assignment not found or does not belong to you in this studio",
+                )
+
         row = await conn.fetchrow(
             f"INSERT INTO recordings "
             f"(studio_id, student_id, assignment_id, r2_object_key, mime_type, duration_seconds, file_size_bytes) "
@@ -101,7 +114,7 @@ async def create_recording(
             body.studio_id,
             user.id,
             body.assignment_id,
-            "placeholder",  # Will be updated after we have the ID
+            "placeholder",
             body.mime_type,
             body.duration_seconds,
             body.file_size_bytes,

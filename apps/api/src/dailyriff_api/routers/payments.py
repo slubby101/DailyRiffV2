@@ -121,6 +121,17 @@ async def add_payment(
     async with service_transaction() as conn:
         await _require_teacher_or_owner(conn, studio_id, user.id)
 
+        student = await conn.fetchrow(
+            "SELECT user_id FROM studio_members WHERE studio_id = $1 AND user_id = $2 AND role = 'student'",
+            studio_id,
+            body.student_user_id,
+        )
+        if student is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Student not found in this studio",
+            )
+
         row = await conn.fetchrow(
             f"""
             INSERT INTO payments (

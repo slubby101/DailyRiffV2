@@ -99,17 +99,17 @@ class CoppaService:
                 return None
             if row["status"] != "pending":
                 return None
+            if row["stripe_setup_intent_id"] != setup_intent_id:
+                return None
 
             now = datetime.now(tz.utc)
             updated = await conn.fetchrow(
                 f"UPDATE coppa_consents "
-                f"SET status = 'verified', verified_at = $2, "
-                f"    stripe_setup_intent_id = $3, updated_at = $2 "
+                f"SET status = 'verified', verified_at = $2, updated_at = $2 "
                 f"WHERE id = $1 AND status = 'pending' "
                 f"RETURNING {COPPA_CONSENT_COLUMNS}",
                 consent_id,
                 now,
-                setup_intent_id,
             )
 
         if updated is None:
@@ -216,14 +216,16 @@ class CoppaService:
         self,
         *,
         setup_intent_id: str,
+        conn: Any | None = None,
     ) -> dict[str, Any] | None:
         """Confirm a consent via Stripe webhook (setup_intent.succeeded).
 
         Looks up consent by stripe_setup_intent_id, transitions pending→verified.
+        Pass conn to reuse an existing transaction (for atomic idempotency).
         Returns updated consent dict or None.
         """
-        async with service_transaction() as conn:
-            row = await conn.fetchrow(
+        async def _do(c: Any) -> dict[str, Any] | None:
+            row = await c.fetchrow(
                 f"SELECT {COPPA_CONSENT_COLUMNS} FROM coppa_consents "
                 f"WHERE stripe_setup_intent_id = $1",
                 setup_intent_id,
@@ -232,7 +234,7 @@ class CoppaService:
                 return None
 
             now = datetime.now(tz.utc)
-            updated = await conn.fetchrow(
+            updated = await c.fetchrow(
                 f"UPDATE coppa_consents "
                 f"SET status = 'verified', verified_at = $2, updated_at = $2 "
                 f"WHERE id = $1 AND status = 'pending' "
@@ -240,7 +242,11 @@ class CoppaService:
                 row["id"],
                 now,
             )
+            if updated is None:
+                return None
+            return dict(updated)
 
-        if updated is None:
-            return None
-        return dict(updated)
+        if conn is not None:
+            return await _do(conn)
+        async with service_transaction() as new_conn:
+            return await _do(new_conn)

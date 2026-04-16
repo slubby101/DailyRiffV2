@@ -5254,6 +5254,220 @@
         }
       }
     },
+    "/student/dashboard": {
+      "get": {
+        "tags": [
+          "student-dashboard"
+        ],
+        "summary": "Get Student Dashboard",
+        "description": "Aggregated student dashboard: streak, upcoming assignments, recent recordings.",
+        "operationId": "get_student_dashboard_student_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDashboardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/student/streak": {
+      "get": {
+        "tags": [
+          "student-dashboard"
+        ],
+        "summary": "Get Streak",
+        "description": "Current streak and weekly minutes for the authenticated student.",
+        "operationId": "get_streak_student_streak_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreakResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/student/assignments": {
+      "get": {
+        "tags": [
+          "student-dashboard"
+        ],
+        "summary": "List Student Assignments",
+        "description": "List assignments for the authenticated student.",
+        "operationId": "list_student_assignments_student_assignments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssignmentSummary"
+                  },
+                  "title": "Response List Student Assignments Student Assignments Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/student/recordings": {
+      "get": {
+        "tags": [
+          "student-dashboard"
+        ],
+        "summary": "List Student Recordings",
+        "description": "Recording history for the authenticated student.",
+        "operationId": "list_student_recordings_student_recordings_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecordingHistoryItem"
+                  },
+                  "title": "Response List Student Recordings Student Recordings Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
     "/studios/{studio_id}/students": {
       "get": {
         "tags": [
@@ -6936,6 +7150,49 @@
           "updated_at"
         ],
         "title": "AssignmentResponse"
+      },
+      "AssignmentSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "created_at"
+        ],
+        "title": "AssignmentSummary"
       },
       "AttendanceMarkRequest": {
         "properties": {
@@ -9604,6 +9861,56 @@
         ],
         "title": "RecordingCreateRequest"
       },
+      "RecordingHistoryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "assignment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "uploaded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploaded At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "duration_seconds",
+          "created_at"
+        ],
+        "title": "RecordingHistoryItem"
+      },
       "RecordingResponse": {
         "properties": {
           "id": {
@@ -10007,6 +10314,69 @@
           "value_json"
         ],
         "title": "SettingUpdateRequest"
+      },
+      "StreakResponse": {
+        "properties": {
+          "current_streak": {
+            "type": "integer",
+            "title": "Current Streak"
+          },
+          "longest_streak": {
+            "type": "integer",
+            "title": "Longest Streak"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "total_practice_days": {
+            "type": "integer",
+            "title": "Total Practice Days"
+          },
+          "weekly_minutes": {
+            "type": "integer",
+            "title": "Weekly Minutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "current_streak",
+          "longest_streak",
+          "is_active",
+          "total_practice_days",
+          "weekly_minutes"
+        ],
+        "title": "StreakResponse"
+      },
+      "StudentDashboardResponse": {
+        "properties": {
+          "streak": {
+            "$ref": "#/components/schemas/StreakResponse"
+          },
+          "upcoming_assignments": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentSummary"
+            },
+            "type": "array",
+            "title": "Upcoming Assignments"
+          },
+          "recent_recordings": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingHistoryItem"
+            },
+            "type": "array",
+            "title": "Recent Recordings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "streak",
+          "upcoming_assignments",
+          "recent_recordings"
+        ],
+        "title": "StudentDashboardResponse"
       },
       "StudentDetail": {
         "properties": {

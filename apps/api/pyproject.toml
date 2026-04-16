@@ -15,6 +15,7 @@ dependencies = [
     "httpx>=0.27",
     "pywebpush>=2.0",
     "pydantic>=2.0",
+    "slowapi>=0.1.9",
 ]
 
 [dependency-groups]
@@ -36,6 +37,7 @@ source = ["src/dailyriff_api"]
 [tool.coverage.report]
 include = [
     "src/dailyriff_api/auth.py",
+    "src/dailyriff_api/rate_limit.py",
     "src/dailyriff_api/services/*",
     "src/dailyriff_api/routers/*",
     "src/dailyriff_api/schemas/*",

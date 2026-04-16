@@ -10,6 +10,34 @@ export type ActivityLogResponse = {
     user_id: string;
 };
 
+export type CategoryPreferenceResponse = {
+    category: string;
+    channel: string;
+    enabled: boolean;
+    id: string;
+    updated_at: string;
+    user_id: string;
+};
+
+export type CategoryPreferenceUpsertRequest = {
+    category: string;
+    channel: string;
+    enabled: boolean;
+};
+
+export type ConversationCreateRequest = {
+    participant_ids: Array<(string)>;
+    studio_id: string;
+};
+
+export type ConversationResponse = {
+    created_at: string;
+    created_by: string;
+    id: string;
+    studio_id: string;
+    updated_at: string;
+};
+
 export type DeviceRegisterRequest = {
     channel: 'expo' | 'webpush';
     keys?: ({
@@ -34,10 +62,58 @@ export type DeviceResponse = {
     user_id: string;
 };
 
+export type EmployeeCreateRequest = {
+    notes?: (string | null);
+    role: 'owner' | 'support' | 'verifier';
+    user_id: string;
+};
+
+export type role = 'owner' | 'support' | 'verifier';
+
+export type EmployeeResponse = {
+    created_at: string;
+    created_by?: (string | null);
+    id: string;
+    notes?: (string | null);
+    role: 'owner' | 'support' | 'verifier';
+    user_id: string;
+};
+
+export type EmployeeUpdateRequest = {
+    notes?: (string | null);
+    role?: ('owner' | 'support' | 'verifier' | null);
+};
+
 export type HealthResponse = {
     git_sha: string;
     status: string;
     version: string;
+};
+
+export type MessageCreateRequest = {
+    body: string;
+};
+
+export type MessageResponse = {
+    body: string;
+    conversation_id: string;
+    created_at: string;
+    id: string;
+    sender_id: string;
+};
+
+export type NotificationTemplateResponse = {
+    body_template: string;
+    category: string;
+    channels: Array<(string)>;
+    created_at: string;
+    enabled: boolean;
+    event_type: string;
+    id: string;
+    persona: string;
+    title_template: string;
+    trigger_source: string;
+    updated_at: string;
 };
 
 export type PreferencesResponse = {
@@ -56,6 +132,33 @@ export type PreferencesUpdateRequest = {
     quiet_hours_start?: (string | null);
     realtime_enabled?: (boolean | null);
     web_push_enabled?: (boolean | null);
+};
+
+export type ResourceCreateRequest = {
+    category?: (string | null);
+    description?: (string | null);
+    studio_id: string;
+    title: string;
+    url: string;
+};
+
+export type ResourceResponse = {
+    category?: (string | null);
+    created_at: string;
+    created_by?: (string | null);
+    description?: (string | null);
+    id: string;
+    studio_id: string;
+    title: string;
+    updated_at: string;
+    url: string;
+};
+
+export type ResourceUpdateRequest = {
+    category?: (string | null);
+    description?: (string | null);
+    title?: (string | null);
+    url?: (string | null);
 };
 
 export type SettingCreateRequest = {

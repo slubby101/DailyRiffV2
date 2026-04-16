@@ -8,6 +8,8 @@ shared secret.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -18,6 +20,8 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.algorithms import ECAlgorithm
+
+logger = logging.getLogger(__name__)
 
 ALGORITHMS = ["HS256", "ES256"]
 
@@ -33,6 +37,7 @@ _bearer = HTTPBearer(auto_error=False)
 _JWKS_TTL_SECONDS = 300
 _jwks_cache: dict | None = None
 _jwks_cache_time: float = 0.0
+_jwks_lock = asyncio.Lock()
 
 
 @dataclass(frozen=True)
@@ -42,6 +47,7 @@ class CurrentUser:
     role: str | None
     studio_id: UUID | None = None
     impersonation_session_id: UUID | None = None
+    has_totp: bool = False
 
 
 def _jwt_secret() -> str:
@@ -73,9 +79,13 @@ async def _get_jwks() -> dict:
     now = time.monotonic()
     if _jwks_cache is not None and (now - _jwks_cache_time) < _JWKS_TTL_SECONDS:
         return _jwks_cache
-    _jwks_cache = await _fetch_jwks_raw()
-    _jwks_cache_time = now
-    return _jwks_cache
+    async with _jwks_lock:
+        now = time.monotonic()
+        if _jwks_cache is not None and (now - _jwks_cache_time) < _JWKS_TTL_SECONDS:
+            return _jwks_cache
+        _jwks_cache = await _fetch_jwks_raw()
+        _jwks_cache_time = now
+        return _jwks_cache
 
 
 def _find_jwk_by_kid(jwks: dict, kid: str) -> dict | None:
@@ -120,14 +130,14 @@ async def _decode_token(token: str) -> dict:
         )
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> CurrentUser:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise _unauthorized()
 
     try:
-        payload = _decode_token_sync(credentials.credentials)
+        payload = await _decode_token(credentials.credentials)
     except jwt.ExpiredSignatureError as exc:
         raise _unauthorized("Token expired") from exc
     except jwt.InvalidTokenError as exc:
@@ -143,41 +153,64 @@ def get_current_user(
         raise _unauthorized("Token subject is not a UUID") from exc
 
     app_metadata = payload.get("app_metadata") or {}
+
+    # Check AMR (Authentication Methods Reference) for TOTP
+    amr = payload.get("amr") or []
+    has_totp = any(
+        entry.get("method") == "totp" for entry in amr if isinstance(entry, dict)
+    )
+
     return CurrentUser(
         id=user_id,
         email=payload.get("email"),
         role=app_metadata.get("role"),
+        has_totp=has_totp,
     )
 
 
-def _decode_token_sync(token: str) -> dict:
-    """Synchronous token decode — HS256 tokens don't need async.
 
-    For ES256 tokens (with kid), we run the async JWKS fetch in a new event loop
-    since FastAPI's sync dependencies don't run in an async context.
+
+# ---------------------------------------------------------------------------
+# Superadmin + TOTP enforcement dependency
+# ---------------------------------------------------------------------------
+
+SUPERADMIN_RESPONSES: dict[int | str, dict] = {
+    **PROTECTED_RESPONSES,
+    403: {"description": "Superadmin role required"},
+}
+
+
+def _is_dev_or_staging() -> bool:
+    env = os.environ.get("ENVIRONMENT", "").lower()
+    return env in ("development", "staging", "test")
+
+
+def require_superadmin(
+    user: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    """Require superadmin role + TOTP when factor is enrolled.
+
+    In dev/staging without TOTP enrolled, logs a warning but does not block.
+    In production, TOTP is enforced if the user has it enrolled (checked
+    via the ``amr`` JWT claim).
     """
-    import asyncio
-
-    unverified_header = jwt.get_unverified_header(token)
-    kid = unverified_header.get("kid")
-
-    if kid:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-
-        if loop and loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(asyncio.run, _decode_token(token))
-                return future.result()
-        else:
-            return asyncio.run(_decode_token(token))
-    else:
-        return jwt.decode(
-            token,
-            _jwt_secret(),
-            algorithms=["HS256"],
-            audience="authenticated",
+    if user.role != "superadmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superadmin role required",
         )
+
+    if not user.has_totp:
+        if _is_dev_or_staging():
+            logger.warning(
+                "Superadmin %s accessing protected route without TOTP "
+                "(allowed in dev/staging)",
+                user.id,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="TOTP verification required for superadmin access",
+            )
+
+    return user

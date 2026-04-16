@@ -58,6 +58,135 @@
         "title": "ActivityLogResponse",
         "type": "object"
       },
+      "CategoryPreferenceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "category",
+          "channel",
+          "enabled",
+          "updated_at"
+        ],
+        "title": "CategoryPreferenceResponse",
+        "type": "object"
+      },
+      "CategoryPreferenceUpsertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "category",
+          "channel",
+          "enabled"
+        ],
+        "title": "CategoryPreferenceUpsertRequest",
+        "type": "object"
+      },
+      "ConversationCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "participant_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Participant Ids",
+            "type": "array"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "studio_id",
+          "participant_ids"
+        ],
+        "title": "ConversationCreateRequest",
+        "type": "object"
+      },
+      "ConversationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studio_id",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ConversationResponse",
+        "type": "object"
+      },
       "DeviceRegisterRequest": {
         "additionalProperties": false,
         "properties": {
@@ -180,6 +309,136 @@
         "title": "DeviceResponse",
         "type": "object"
       },
+      "EmployeeCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "support",
+              "verifier"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "role"
+        ],
+        "title": "EmployeeCreateRequest",
+        "type": "object"
+      },
+      "EmployeeResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "support",
+              "verifier"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "role",
+          "created_at"
+        ],
+        "title": "EmployeeResponse",
+        "type": "object"
+      },
+      "EmployeeUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "owner",
+                  "support",
+                  "verifier"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "title": "EmployeeUpdateRequest",
+        "type": "object"
+      },
       "HealthResponse": {
         "additionalProperties": false,
         "properties": {
@@ -202,6 +461,128 @@
           "git_sha"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "MessageCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "MessageCreateRequest",
+        "type": "object"
+      },
+      "MessageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "conversation_id": {
+            "format": "uuid",
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "sender_id": {
+            "format": "uuid",
+            "title": "Sender Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "conversation_id",
+          "sender_id",
+          "body",
+          "created_at"
+        ],
+        "title": "MessageResponse",
+        "type": "object"
+      },
+      "NotificationTemplateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "body_template": {
+            "title": "Body Template",
+            "type": "string"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "persona": {
+            "title": "Persona",
+            "type": "string"
+          },
+          "title_template": {
+            "title": "Title Template",
+            "type": "string"
+          },
+          "trigger_source": {
+            "title": "Trigger Source",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_type",
+          "category",
+          "persona",
+          "title_template",
+          "body_template",
+          "channels",
+          "trigger_source",
+          "enabled",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "NotificationTemplateResponse",
         "type": "object"
       },
       "PreferencesResponse": {
@@ -332,6 +713,181 @@
           }
         },
         "title": "PreferencesUpdateRequest",
+        "type": "object"
+      },
+      "ResourceCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "studio_id",
+          "title",
+          "url"
+        ],
+        "title": "ResourceCreateRequest",
+        "type": "object"
+      },
+      "ResourceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studio_id",
+          "title",
+          "url",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ResourceResponse",
+        "type": "object"
+      },
+      "ResourceUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "title": "ResourceUpdateRequest",
         "type": "object"
       },
       "SettingCreateRequest": {
@@ -637,6 +1193,571 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/studios": {
+      "get": {
+        "description": "List all studios across the platform (bypasses RLS).",
+        "operationId": "list_all_studios_admin_studios_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudioResponse"
+                  },
+                  "title": "Response List All Studios Admin Studios Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List All Studios",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/studios/{studio_id}": {
+      "get": {
+        "description": "Get a single studio by ID (bypasses RLS).",
+        "operationId": "get_studio_admin_studios__studio_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Studio",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/studios/{studio_id}/suspend": {
+      "post": {
+        "description": "Suspend a studio (superadmin, bypasses RLS).",
+        "operationId": "suspend_studio_admin_studios__studio_id__suspend_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Suspend Studio",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/studios/{studio_id}/verify": {
+      "post": {
+        "description": "Verify/activate a studio (superadmin, bypasses RLS).",
+        "operationId": "verify_studio_admin_studios__studio_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Studio",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/verification-queue": {
+      "get": {
+        "description": "List studios awaiting verification.",
+        "operationId": "list_pending_studios_admin_verification_queue_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudioResponse"
+                  },
+                  "title": "Response List Pending Studios Admin Verification Queue Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Pending Studios",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/conversations": {
+      "get": {
+        "operationId": "list_conversations_conversations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationResponse"
+                  },
+                  "title": "Response List Conversations Conversations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Conversations",
+        "tags": [
+          "messaging"
+        ]
+      },
+      "post": {
+        "operationId": "create_conversation_conversations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Conversation",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/conversations/{conversation_id}": {
+      "get": {
+        "operationId": "get_conversation_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Conversation not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Conversation",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/conversations/{conversation_id}/messages": {
+      "get": {
+        "operationId": "list_messages_conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MessageResponse"
+                  },
+                  "title": "Response List Messages Conversations  Conversation Id  Messages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Conversation not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Messages",
+        "tags": [
+          "messaging"
+        ]
+      },
+      "post": {
+        "operationId": "send_message_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Conversation not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send Message",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
+    "/conversations/{conversation_id}/read": {
+      "post": {
+        "operationId": "mark_conversation_read_conversations__conversation_id__read_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Mark Conversation Read",
+        "tags": [
+          "messaging"
+        ]
+      }
+    },
     "/devices": {
       "get": {
         "operationId": "list_devices_devices_get",
@@ -714,6 +1835,9 @@
           },
           "422": {
             "description": "Validation error"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
           }
         },
         "security": [
@@ -773,6 +1897,267 @@
         ]
       }
     },
+    "/employees": {
+      "get": {
+        "operationId": "list_employees_employees_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EmployeeResponse"
+                  },
+                  "title": "Response List Employees Employees Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Employees",
+        "tags": [
+          "employees"
+        ]
+      },
+      "post": {
+        "operationId": "create_employee_employees_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Employee",
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/employees/{employee_id}": {
+      "delete": {
+        "operationId": "delete_employee_employees__employee_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Employee not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Employee",
+        "tags": [
+          "employees"
+        ]
+      },
+      "get": {
+        "operationId": "get_employee_employees__employee_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Employee not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Employee",
+        "tags": [
+          "employees"
+        ]
+      },
+      "patch": {
+        "operationId": "update_employee_employees__employee_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employee_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Employee Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Employee not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Employee",
+        "tags": [
+          "employees"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "health_health_get",
@@ -789,6 +2174,94 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/notification-category-preferences": {
+      "get": {
+        "operationId": "list_category_preferences_notification_category_preferences_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryPreferenceResponse"
+                  },
+                  "title": "Response List Category Preferences Notification Category Preferences Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Category Preferences",
+        "tags": [
+          "notification-templates"
+        ]
+      },
+      "put": {
+        "operationId": "upsert_category_preference_notification_category_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryPreferenceUpsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryPreferenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upsert Category Preference",
+        "tags": [
+          "notification-templates"
+        ]
       }
     },
     "/notification-preferences": {
@@ -872,6 +2345,294 @@
         "summary": "Update Preferences",
         "tags": [
           "preferences"
+        ]
+      }
+    },
+    "/notification-templates": {
+      "get": {
+        "operationId": "list_templates_notification_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationTemplateResponse"
+                  },
+                  "title": "Response List Templates Notification Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Templates",
+        "tags": [
+          "notification-templates"
+        ]
+      }
+    },
+    "/resources": {
+      "get": {
+        "operationId": "list_resources_resources_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResourceResponse"
+                  },
+                  "title": "Response List Resources Resources Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Resources",
+        "tags": [
+          "resources"
+        ]
+      },
+      "post": {
+        "operationId": "create_resource_resources_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Resource",
+        "tags": [
+          "resources"
+        ]
+      }
+    },
+    "/resources/{resource_id}": {
+      "delete": {
+        "operationId": "delete_resource_resources__resource_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Resource",
+        "tags": [
+          "resources"
+        ]
+      },
+      "get": {
+        "operationId": "get_resource_resources__resource_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Resource",
+        "tags": [
+          "resources"
+        ]
+      },
+      "patch": {
+        "operationId": "update_resource_resources__resource_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Resource",
+        "tags": [
+          "resources"
         ]
       }
     },

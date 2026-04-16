@@ -54,15 +54,6 @@ def upgrade() -> None:
 
     op.execute("ALTER TABLE conversations ENABLE ROW LEVEL SECURITY")
     op.execute(
-        "CREATE POLICY conversations_participant_select ON conversations "
-        "FOR SELECT TO authenticated "
-        "USING (EXISTS ("
-        "  SELECT 1 FROM conversation_participants cp "
-        "  WHERE cp.conversation_id = id "
-        "  AND cp.user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid"
-        "))"
-    )
-    op.execute(
         "CREATE POLICY conversations_insert ON conversations "
         "FOR INSERT TO authenticated "
         "WITH CHECK (created_by = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid)"
@@ -116,6 +107,17 @@ def upgrade() -> None:
         "CREATE POLICY cp_update ON conversation_participants "
         "FOR UPDATE TO authenticated "
         "USING (user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid)"
+    )
+
+    # conversations SELECT policy (deferred — needs conversation_participants to exist)
+    op.execute(
+        "CREATE POLICY conversations_participant_select ON conversations "
+        "FOR SELECT TO authenticated "
+        "USING (EXISTS ("
+        "  SELECT 1 FROM conversation_participants cp "
+        "  WHERE cp.conversation_id = id "
+        "  AND cp.user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid"
+        "))"
     )
 
     # ---- messages --------------------------------------------------------------

@@ -5636,6 +5636,248 @@
         ]
       }
     },
+    "/parent/children": {
+      "get": {
+        "tags": [
+          "parent-dashboard"
+        ],
+        "summary": "List Children",
+        "description": "List all children with dashboard summary data.",
+        "operationId": "list_children_parent_children_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentDashboardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/parent/children/{child_user_id}/schedule": {
+      "get": {
+        "tags": [
+          "parent-dashboard"
+        ],
+        "summary": "Get Child Schedule",
+        "description": "Upcoming lesson schedule for a child.",
+        "operationId": "get_child_schedule_parent_children__child_user_id__schedule_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "child_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Child User Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChildScheduleItem"
+                  },
+                  "title": "Response Get Child Schedule Parent Children  Child User Id  Schedule Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/parent/children/{child_user_id}/progress": {
+      "get": {
+        "tags": [
+          "parent-dashboard"
+        ],
+        "summary": "Get Child Progress",
+        "description": "Streaks, assignment completion, recent recordings for a child.",
+        "operationId": "get_child_progress_parent_children__child_user_id__progress_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "child_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Child User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildProgressResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/parent/children/{child_user_id}/payments": {
+      "get": {
+        "tags": [
+          "parent-dashboard"
+        ],
+        "summary": "Get Child Payments",
+        "description": "Read-only payment history + outstanding balance for a child.",
+        "operationId": "get_child_payments_parent_children__child_user_id__payments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "child_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Child User Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildPaymentsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
     "/studios/{studio_id}/payments": {
       "get": {
         "tags": [
@@ -8284,6 +8526,412 @@
         ],
         "title": "CategoryPreferenceUpsertRequest"
       },
+      "ChildPaymentItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "memo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memo"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "status",
+          "created_at"
+        ],
+        "title": "ChildPaymentItem"
+      },
+      "ChildPaymentsResponse": {
+        "properties": {
+          "child_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Child User Id"
+          },
+          "studio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Studio Id"
+          },
+          "total_pending": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pending",
+            "default": "0"
+          },
+          "total_paid": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Paid",
+            "default": "0"
+          },
+          "total_refunded": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Refunded",
+            "default": "0"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/ChildPaymentItem"
+            },
+            "type": "array",
+            "title": "Payments",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "child_user_id",
+          "studio_id"
+        ],
+        "title": "ChildPaymentsResponse"
+      },
+      "ChildPermissions": {
+        "properties": {
+          "is_primary_contact": {
+            "type": "boolean",
+            "title": "Is Primary Contact"
+          },
+          "can_manage_payments": {
+            "type": "boolean",
+            "title": "Can Manage Payments"
+          },
+          "can_view_progress": {
+            "type": "boolean",
+            "title": "Can View Progress"
+          },
+          "can_communicate_with_teacher": {
+            "type": "boolean",
+            "title": "Can Communicate With Teacher"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "is_primary_contact",
+          "can_manage_payments",
+          "can_view_progress",
+          "can_communicate_with_teacher"
+        ],
+        "title": "ChildPermissions"
+      },
+      "ChildProgressResponse": {
+        "properties": {
+          "child_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Child User Id"
+          },
+          "current_streak": {
+            "type": "integer",
+            "title": "Current Streak",
+            "default": 0
+          },
+          "longest_streak": {
+            "type": "integer",
+            "title": "Longest Streak",
+            "default": 0
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": false
+          },
+          "total_practice_days": {
+            "type": "integer",
+            "title": "Total Practice Days",
+            "default": 0
+          },
+          "weekly_minutes": {
+            "type": "integer",
+            "title": "Weekly Minutes",
+            "default": 0
+          },
+          "total_assignments": {
+            "type": "integer",
+            "title": "Total Assignments",
+            "default": 0
+          },
+          "completed_assignments": {
+            "type": "integer",
+            "title": "Completed Assignments",
+            "default": 0
+          },
+          "recent_recordings": {
+            "items": {
+              "$ref": "#/components/schemas/ChildRecordingItem"
+            },
+            "type": "array",
+            "title": "Recent Recordings",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "child_user_id"
+        ],
+        "title": "ChildProgressResponse"
+      },
+      "ChildRecordingItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "assignment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "uploaded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploaded At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "duration_seconds",
+          "created_at"
+        ],
+        "title": "ChildRecordingItem"
+      },
+      "ChildScheduleItem": {
+        "properties": {
+          "lesson_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Lesson Id"
+          },
+          "occurrence_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurrence Id"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "teacher_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Email"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "lesson_id",
+          "start_date"
+        ],
+        "title": "ChildScheduleItem"
+      },
+      "ChildSummary": {
+        "properties": {
+          "child_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Child User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "studio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Studio Id"
+          },
+          "studio_name": {
+            "type": "string",
+            "title": "Studio Name"
+          },
+          "parent_child_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Parent Child Id"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/ChildPermissions"
+          },
+          "next_lesson_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Lesson Date"
+          },
+          "latest_assignment_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Assignment Title"
+          },
+          "current_streak": {
+            "type": "integer",
+            "title": "Current Streak",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "child_user_id",
+          "studio_id",
+          "studio_name",
+          "parent_child_id",
+          "permissions"
+        ],
+        "title": "ChildSummary"
+      },
       "ConversationCreateRequest": {
         "properties": {
           "studio_id": {
@@ -10562,6 +11210,23 @@
           "created_at"
         ],
         "title": "ParentChildPermissions"
+      },
+      "ParentDashboardResponse": {
+        "properties": {
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/ChildSummary"
+            },
+            "type": "array",
+            "title": "Children"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "children"
+        ],
+        "title": "ParentDashboardResponse"
       },
       "ParentInfo": {
         "properties": {

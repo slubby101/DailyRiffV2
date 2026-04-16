@@ -1,8 +1,10 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
+const ENVIRONMENT = process.env.EXPO_PUBLIC_ENVIRONMENT ?? "development";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "DailyRiff",
+  name: ENVIRONMENT === "production" ? "DailyRiff" : `DailyRiff (${ENVIRONMENT})`,
   slug: "dailyriff",
   version: "0.0.1",
   orientation: "portrait",
@@ -25,6 +27,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   },
   plugins: ["expo-router", "expo-secure-store", "expo-notifications"],
+  extra: {
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "http://localhost:54321",
+    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    apiUrl: process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000",
+    environment: ENVIRONMENT,
+  },
   experiments: {
     typedRoutes: true,
   },

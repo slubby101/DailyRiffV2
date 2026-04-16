@@ -116,6 +116,40 @@ packages/api-client/src/   index.ts, types.gen.ts (auto-generated — never edit
 - `docs/prds/stage-1-deferred-features.md` — Stage 1 scope tracker (Q1–Q29 grill-me output)
 - `docs/DESIGN.md` — Design system (typography, colors, spacing, motion, voice)
 
+## Deploy pipeline
+
+`.github/workflows/deploy.yaml` — 2.5-stage pipeline triggered on merge to master:
+
+| Stage | Environment | Gate | What it does |
+|---|---|---|---|
+| 1 | `staging` | Auto (on merge) | Runs `alembic upgrade head` against staging Supabase |
+| 2 | `production` | Manual approval | Runs `alembic upgrade head` against production Supabase |
+
+**Routing rules:**
+
+| Change type | Path |
+|---|---|
+| Frontend-only | PR preview (Vercel) → merge → Vercel prod auto-deploy |
+| API logic (no schema) | PR preview → merge → Vercel prod |
+| Alembic migrations | Merge → staging DB → approval → prod DB |
+| Stripe/COPPA flows | Merge → staging (test keys) → approval → prod (live keys) |
+| Env config changes | Staging → approval → prod |
+
+**GitHub Environment secrets required:**
+- `staging`: `STAGING_DATABASE_URL`
+- `production`: `PRODUCTION_DATABASE_URL` (requires reviewer approval)
+
+**Vercel setup (manual):**
+- Connect `slubby101/DailyRiffV2` to Vercel, root directory `apps/web`, framework preset Next.js
+- Per-environment vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_PROJECT_REF`, `NEXT_PUBLIC_API_URL`, `ENVIRONMENT`
+
+**Expo EAS build profiles** (`apps/mobile/eas.json`):
+- `development`: local Supabase, dev client
+- `preview`: staging Supabase, internal distribution
+- `production`: prod Supabase, auto-increment version
+
+Health checks: `GET /api/health` (web) + `GET /health` (API).
+
 ## Design System
 
 Always read `docs/DESIGN.md` before making any visual or UI decisions. All font choices (Fraunces display + Geist body + Geist Mono), colors (warm amber brand primary, 12-swatch per-studio Radix palette), spacing, radius (8px), and aesthetic direction (Editorial Warmth) are defined there. Do not deviate without explicit user approval. In QA mode, flag any code that doesn't match `docs/DESIGN.md`.

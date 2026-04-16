@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Stage 1: Run staging Alembic migration automatically on every merge
+  # --------------------------------------------------------------------------
+  staging-migrate:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Python dependencies
+        working-directory: apps/api
+        run: uv sync
+
+      - name: Run Alembic migrations against staging
+        working-directory: apps/api
+        run: uv run alembic upgrade head
+
+      - name: Verify migration health
+        working-directory: apps/api
+        run: uv run alembic current
+
+  # --------------------------------------------------------------------------
+  # Stage 2: Production migration — requires manual approval via GitHub
+  # Environment protection rules
+  # --------------------------------------------------------------------------
+  production-migrate:
+    runs-on: ubuntu-latest
+    needs: staging-migrate
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Python dependencies
+        working-directory: apps/api
+        run: uv sync
+
+      - name: Run Alembic migrations against production
+        working-directory: apps/api
+        run: uv run alembic upgrade head
+
+      - name: Verify migration health
+        working-directory: apps/api
+        run: uv run alembic current

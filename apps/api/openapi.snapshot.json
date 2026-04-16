@@ -1722,6 +1722,7 @@
           "amount": {
             "anyOf": [
               {
+                "exclusiveMinimum": 0,
                 "type": "number"
               },
               {
@@ -1769,11 +1770,6 @@
               }
             ],
             "title": "Payer User Id"
-          },
-          "status": {
-            "default": "pending",
-            "title": "Status",
-            "type": "string"
           },
           "student_user_id": {
             "format": "uuid",
@@ -1901,6 +1897,7 @@
           "amount": {
             "anyOf": [
               {
+                "exclusiveMinimum": 0,
                 "type": "number"
               },
               {
@@ -1938,6 +1935,11 @@
           "status": {
             "anyOf": [
               {
+                "enum": [
+                  "pending",
+                  "paid",
+                  "refunded"
+                ],
                 "type": "string"
               },
               {
@@ -3167,6 +3169,66 @@
           "name"
         ],
         "title": "WaitlistSubmitRequest",
+        "type": "object"
+      },
+      "WaitlistSubmitResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "invited"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "studio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Studio Name"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "studio_name",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WaitlistSubmitResponse",
         "type": "object"
       }
     },
@@ -7696,7 +7758,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WaitlistEntryResponse"
+                  "$ref": "#/components/schemas/WaitlistSubmitResponse"
                 }
               }
             },

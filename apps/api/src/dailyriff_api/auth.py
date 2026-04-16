@@ -8,6 +8,7 @@ shared secret.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -18,6 +19,8 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.algorithms import ECAlgorithm
+
+logger = logging.getLogger(__name__)
 
 ALGORITHMS = ["HS256", "ES256"]
 
@@ -42,6 +45,7 @@ class CurrentUser:
     role: str | None
     studio_id: UUID | None = None
     impersonation_session_id: UUID | None = None
+    has_totp: bool = False
 
 
 def _jwt_secret() -> str:
@@ -143,10 +147,18 @@ def get_current_user(
         raise _unauthorized("Token subject is not a UUID") from exc
 
     app_metadata = payload.get("app_metadata") or {}
+
+    # Check AMR (Authentication Methods Reference) for TOTP
+    amr = payload.get("amr") or []
+    has_totp = any(
+        entry.get("method") == "totp" for entry in amr if isinstance(entry, dict)
+    )
+
     return CurrentUser(
         id=user_id,
         email=payload.get("email"),
         role=app_metadata.get("role"),
+        has_totp=has_totp,
     )
 
 
@@ -181,3 +193,49 @@ def _decode_token_sync(token: str) -> dict:
             algorithms=["HS256"],
             audience="authenticated",
         )
+
+
+# ---------------------------------------------------------------------------
+# Superadmin + TOTP enforcement dependency
+# ---------------------------------------------------------------------------
+
+SUPERADMIN_RESPONSES: dict[int | str, dict] = {
+    **PROTECTED_RESPONSES,
+    403: {"description": "Superadmin role required"},
+}
+
+
+def _is_dev_or_staging() -> bool:
+    env = os.environ.get("ENVIRONMENT", "development").lower()
+    return env in ("development", "staging", "test")
+
+
+def require_superadmin(
+    user: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    """Require superadmin role + TOTP when factor is enrolled.
+
+    In dev/staging without TOTP enrolled, logs a warning but does not block.
+    In production, TOTP is enforced if the user has it enrolled (checked
+    via the ``amr`` JWT claim).
+    """
+    if user.role != "superadmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superadmin role required",
+        )
+
+    if not user.has_totp:
+        if _is_dev_or_staging():
+            logger.warning(
+                "Superadmin %s accessing protected route without TOTP "
+                "(allowed in dev/staging)",
+                user.id,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="TOTP verification required for superadmin access",
+            )
+
+    return user

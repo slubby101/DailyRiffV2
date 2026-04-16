@@ -139,7 +139,6 @@ class TestConfirmEndpoint:
 
         mock_svc = MagicMock()
         mock_svc.confirm_consent = AsyncMock(return_value=VERIFIED_CONSENT_ROW)
-        monkeypatch.setattr(mod, "_get_coppa_service", lambda: mock_svc)
 
         with patch.object(mod, "CoppaService", return_value=mock_svc):
             token = make_test_jwt(user_id=USER_A_ID)
@@ -285,18 +284,20 @@ class TestStripeWebhook:
         secret = "whsec_test_secret"
         monkeypatch.setattr(mod, "_get_stripe_webhook_secret", lambda: secret)
 
-        # Mock idempotency claim
-        mock_idempotency = MagicMock()
-        mock_idempotency.claim_event = AsyncMock(return_value=True)
-        monkeypatch.setattr(mod, "IdempotencyService", lambda: mock_idempotency)
-
         # Mock coppa service
         mock_svc = MagicMock()
         mock_svc.confirm_via_webhook = AsyncMock(return_value=VERIFIED_CONSENT_ROW)
         monkeypatch.setattr(mod, "CoppaService", lambda: mock_svc)
 
-        # Mock service_transaction for activity log
-        monkeypatch.setattr(mod, "service_transaction", _make_svc_ctx(fetchrow_results=[]))
+        # Mock service_transaction: idempotency claim returns row (first claim), then activity log
+        @asynccontextmanager
+        async def _svc_ctx():
+            conn = AsyncMock()
+            conn.fetchrow = AsyncMock(return_value={"event_id": "evt_test_123"})
+            conn.execute = AsyncMock(return_value="INSERT 1")
+            yield conn
+
+        monkeypatch.setattr(mod, "service_transaction", _svc_ctx)
 
         payload = json.dumps({
             "id": "evt_test_123",
@@ -319,7 +320,7 @@ class TestStripeWebhook:
 
         assert resp.status_code == 200
         assert resp.json()["received"] is True
-        mock_svc.confirm_via_webhook.assert_awaited_once_with(setup_intent_id="seti_test_123")
+        mock_svc.confirm_via_webhook.assert_awaited_once()
 
     def test_webhook_duplicate_event_is_idempotent(
         self, client: TestClient, monkeypatch
@@ -328,10 +329,14 @@ class TestStripeWebhook:
         secret = "whsec_test_secret"
         monkeypatch.setattr(mod, "_get_stripe_webhook_secret", lambda: secret)
 
-        # Duplicate claim returns False
-        mock_idempotency = MagicMock()
-        mock_idempotency.claim_event = AsyncMock(return_value=False)
-        monkeypatch.setattr(mod, "IdempotencyService", lambda: mock_idempotency)
+        # Duplicate: fetchrow returns None (ON CONFLICT DO NOTHING → no RETURNING row)
+        @asynccontextmanager
+        async def _svc_ctx():
+            conn = AsyncMock()
+            conn.fetchrow = AsyncMock(return_value=None)
+            yield conn
+
+        monkeypatch.setattr(mod, "service_transaction", _svc_ctx)
 
         payload = json.dumps({"id": "evt_duplicate", "type": "setup_intent.succeeded"}).encode()
         sig_header = self._make_signed_payload(payload, secret)

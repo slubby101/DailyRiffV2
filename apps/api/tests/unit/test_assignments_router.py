@@ -104,6 +104,14 @@ def test_create_assignment(
 
     monkeypatch.setattr(asgn_mod, "rls_transaction", _ctx)
 
+    @asynccontextmanager
+    async def _svc_ctx():
+        conn = AsyncMock()
+        conn.fetchrow = AsyncMock(return_value={"role": "teacher"})
+        yield conn
+
+    monkeypatch.setattr(asgn_mod, "service_transaction", _svc_ctx)
+
     token = make_test_jwt(user_id=USER_A_ID)
     resp = client.post(
         "/assignments",
@@ -210,6 +218,14 @@ def test_create_assignment_validation_rejects_past_due_date(
     monkeypatch.setattr(
         asgn_mod, "rls_transaction", _make_rls_ctx(fetchrow_result=ASSIGNMENT_ROW)
     )
+
+    @asynccontextmanager
+    async def _svc_ctx():
+        conn = AsyncMock()
+        conn.fetchrow = AsyncMock(return_value={"role": "teacher"})
+        yield conn
+
+    monkeypatch.setattr(asgn_mod, "service_transaction", _svc_ctx)
 
     token = make_test_jwt(user_id=USER_A_ID)
     resp = client.post(

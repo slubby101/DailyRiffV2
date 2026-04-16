@@ -48,7 +48,7 @@ test("privacy policy page loads with draft banner", async ({ page }) => {
   await page.goto("/legal/privacy-policy");
   await expect(page).toHaveTitle("Privacy Policy | DailyRiff");
   await expect(page.locator("h1")).toContainText("Privacy Policy");
-  await expect(page.locator('[role="alert"]')).toContainText("DRAFT");
+  await expect(page.locator('[role="alert"]').first()).toContainText("DRAFT");
   await expect(page.locator('a[href="mailto:privacy@dailyriff.com"]')).toBeVisible();
 });
 
@@ -56,14 +56,14 @@ test("terms of service page loads with draft banner", async ({ page }) => {
   await page.goto("/legal/terms-of-service");
   await expect(page).toHaveTitle("Terms of Service | DailyRiff");
   await expect(page.locator("h1")).toContainText("Terms of Service");
-  await expect(page.locator('[role="alert"]')).toContainText("DRAFT");
+  await expect(page.locator('[role="alert"]').first()).toContainText("DRAFT");
 });
 
 test("accessibility page loads with draft banner", async ({ page }) => {
   await page.goto("/legal/accessibility");
   await expect(page).toHaveTitle("Accessibility | DailyRiff");
   await expect(page.locator("h1")).toContainText("Accessibility Statement");
-  await expect(page.locator('[role="alert"]')).toContainText("DRAFT");
+  await expect(page.locator('[role="alert"]').first()).toContainText("DRAFT");
 });
 
 test("footer navigation has legal links", async ({ page }) => {

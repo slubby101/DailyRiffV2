@@ -277,6 +277,14 @@ export type NotificationTemplateResponse = {
     updated_at: string;
 };
 
+export type OutstandingBalanceResponse = {
+    student_user_id: string;
+    studio_id: string;
+    total_paid: string;
+    total_pending: string;
+    total_refunded: string;
+};
+
 export type ParentChildPermissions = {
     can_communicate_with_teacher: boolean;
     can_manage_payments: boolean;
@@ -300,6 +308,39 @@ export type ParentInfo = {
     children?: Array<ParentChildPermissions>;
     parent_id: string;
     user_id: string;
+};
+
+export type PaymentCreateRequest = {
+    amount: (number | string);
+    currency?: string;
+    memo?: (string | null);
+    method?: (string | null);
+    payer_user_id?: (string | null);
+    status?: string;
+    student_user_id: string;
+};
+
+export type PaymentResponse = {
+    amount: string;
+    created_at: string;
+    created_by: string;
+    currency: string;
+    id: string;
+    memo?: (string | null);
+    method?: (string | null);
+    payer_user_id?: (string | null);
+    refunded_at?: (string | null);
+    status: string;
+    student_user_id: string;
+    studio_id: string;
+    updated_at: string;
+};
+
+export type PaymentUpdateRequest = {
+    amount?: (number | string | null);
+    memo?: (string | null);
+    method?: (string | null);
+    status?: (string | null);
 };
 
 export type PlaybackUrlResponse = {

@@ -1538,6 +1538,45 @@
         "title": "NotificationTemplateResponse",
         "type": "object"
       },
+      "OutstandingBalanceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "student_user_id": {
+            "format": "uuid",
+            "title": "Student User Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "total_paid": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Paid",
+            "type": "string"
+          },
+          "total_pending": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pending",
+            "type": "string"
+          },
+          "total_refunded": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Refunded",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_user_id",
+          "studio_id",
+          "total_pending",
+          "total_paid",
+          "total_refunded"
+        ],
+        "title": "OutstandingBalanceResponse",
+        "type": "object"
+      },
       "ParentChildPermissionUpdate": {
         "additionalProperties": false,
         "properties": {
@@ -1675,6 +1714,240 @@
           "user_id"
         ],
         "title": "ParentInfo",
+        "type": "object"
+      },
+      "PaymentCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "default": "USD",
+            "title": "Currency",
+            "type": "string"
+          },
+          "memo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memo"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "payer_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payer User Id"
+          },
+          "status": {
+            "default": "pending",
+            "title": "Status",
+            "type": "string"
+          },
+          "student_user_id": {
+            "format": "uuid",
+            "title": "Student User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_user_id",
+          "amount"
+        ],
+        "title": "PaymentCreateRequest",
+        "type": "object"
+      },
+      "PaymentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "memo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memo"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "payer_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payer User Id"
+          },
+          "refunded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refunded At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "student_user_id": {
+            "format": "uuid",
+            "title": "Student User Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studio_id",
+          "student_user_id",
+          "amount",
+          "currency",
+          "status",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PaymentResponse",
+        "type": "object"
+      },
+      "PaymentUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "memo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memo"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "PaymentUpdateRequest",
         "type": "object"
       },
       "PlaybackUrlResponse": {
@@ -6764,6 +7037,400 @@
         "summary": "Update Parent Child Permissions",
         "tags": [
           "teacher-students"
+        ]
+      }
+    },
+    "/studios/{studio_id}/payments": {
+      "get": {
+        "description": "List payments in a studio. Teacher/owner only.",
+        "operationId": "list_payments_studios__studio_id__payments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by student",
+            "in": "query",
+            "name": "student_user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by student",
+              "title": "Student User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentResponse"
+                  },
+                  "title": "Response List Payments Studios  Studio Id  Payments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Payments",
+        "tags": [
+          "payments"
+        ]
+      },
+      "post": {
+        "description": "Add a payment record. Teacher/owner only.",
+        "operationId": "add_payment_studios__studio_id__payments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add Payment",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/studios/{studio_id}/payments/outstanding/{student_user_id}": {
+      "get": {
+        "description": "Get outstanding balance for a student. Teacher/owner only.",
+        "operationId": "get_outstanding_balance_studios__studio_id__payments_outstanding__student_user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "student_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutstandingBalanceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Outstanding Balance",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/studios/{studio_id}/payments/{payment_id}": {
+      "get": {
+        "description": "Get a payment by ID. Teacher/owner only.",
+        "operationId": "get_payment_studios__studio_id__payments__payment_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Payment not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Payment",
+        "tags": [
+          "payments"
+        ]
+      },
+      "patch": {
+        "description": "Update a payment. Teacher/owner only.",
+        "operationId": "update_payment_studios__studio_id__payments__payment_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Payment not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Payment",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/studios/{studio_id}/payments/{payment_id}/refund": {
+      "post": {
+        "description": "Refund a payment. Teacher/owner only.",
+        "operationId": "refund_payment_studios__studio_id__payments__payment_id__refund_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Payment not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Refund Payment",
+        "tags": [
+          "payments"
         ]
       }
     },

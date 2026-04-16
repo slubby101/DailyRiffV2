@@ -889,6 +889,9 @@
           },
           "422": {
             "description": "Validation error"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
           }
         },
         "security": [

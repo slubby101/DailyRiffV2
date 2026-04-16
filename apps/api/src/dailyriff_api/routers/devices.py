@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from dailyriff_api.auth import (
     PROTECTED_RESPONSES,
@@ -12,6 +12,7 @@ from dailyriff_api.auth import (
     get_current_user,
 )
 from dailyriff_api.db import rls_transaction
+from dailyriff_api.rate_limit import limiter
 from dailyriff_api.schemas.device import DeviceRegisterRequest, DeviceResponse
 
 router = APIRouter(prefix="/devices", tags=["devices"])
@@ -36,9 +37,11 @@ async def list_devices(
     "/register",
     response_model=DeviceResponse,
     status_code=status.HTTP_201_CREATED,
-    responses=PROTECTED_RESPONSES,
+    responses={**PROTECTED_RESPONSES, 429: {"description": "Rate limit exceeded"}},
 )
+@limiter.limit("10/minute")
 async def register_device(
+    request: Request,
     body: DeviceRegisterRequest,
     user: CurrentUser = Depends(get_current_user),
 ) -> DeviceResponse:

@@ -10,8 +10,10 @@ from contextlib import asynccontextmanager
 import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from dailyriff_api.db import close_pool, init_pool
+from dailyriff_api.rate_limit import limiter, rate_limit_exceeded_handler
 from dailyriff_api.routers import devices, health, preferences, resources, settings, studios
 
 
@@ -23,6 +25,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="DailyRiff API", version="0.0.0", lifespan=lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 
 @app.exception_handler(asyncpg.exceptions.DataError)

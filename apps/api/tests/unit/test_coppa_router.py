@@ -124,60 +124,47 @@ class TestAccessControl:
         assert resp.status_code == 403
 
 
-# --- Confirm endpoint ---
+# --- Confirm endpoint removed (security fix: only webhook can confirm) ---
 
 
-class TestConfirmEndpoint:
-    def test_confirm_returns_verified_consent(
-        self, client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
-    ) -> None:
-        import dailyriff_api.routers.coppa as mod
-        # First service_transaction: parent lookup
-        monkeypatch.setattr(mod, "service_transaction", _make_svc_ctx(
-            fetchrow_results=[PARENT_ROW]
-        ))
-
-        mock_svc = MagicMock()
-        mock_svc.confirm_consent = AsyncMock(return_value=VERIFIED_CONSENT_ROW)
-
-        with patch.object(mod, "CoppaService", return_value=mock_svc):
-            token = make_test_jwt(user_id=USER_A_ID)
-            resp = client.post(
-                "/coppa/confirm",
-                json={"consent_id": str(CONSENT_ID), "setup_intent_id": "seti_test_123"},
-                headers={"Authorization": f"Bearer {token}"},
-            )
-
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["status"] == "verified"
-
-    def test_confirm_not_found_returns_400(
-        self, client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
-    ) -> None:
-        import dailyriff_api.routers.coppa as mod
-        monkeypatch.setattr(mod, "service_transaction", _make_svc_ctx(
-            fetchrow_results=[PARENT_ROW]
-        ))
-
-        mock_svc = MagicMock()
-        mock_svc.confirm_consent = AsyncMock(return_value=None)
-
-        with patch.object(mod, "CoppaService", return_value=mock_svc):
-            token = make_test_jwt(user_id=USER_A_ID)
-            resp = client.post(
-                "/coppa/confirm",
-                json={"consent_id": str(CONSENT_ID), "setup_intent_id": "seti_test_123"},
-                headers={"Authorization": f"Bearer {token}"},
-            )
-
-        assert resp.status_code == 400
+class TestConfirmEndpointRemoved:
+    def test_confirm_endpoint_no_longer_exists(self, client: TestClient, make_test_jwt: Callable[..., str]) -> None:
+        """The /coppa/confirm endpoint was removed — confirmation must go through the
+        Stripe webhook which verifies the signature server-side."""
+        token = make_test_jwt(user_id=USER_A_ID)
+        resp = client.post(
+            "/coppa/confirm",
+            json={"consent_id": str(CONSENT_ID), "setup_intent_id": "seti_test_123"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        # 404 or 405 — the route no longer exists
+        assert resp.status_code in (404, 405)
 
 
 # --- Signed form endpoint ---
 
 
 class TestSignedFormEndpoint:
+    def test_signed_form_rejects_non_https_url(
+        self, client: TestClient, make_test_jwt, monkeypatch
+    ) -> None:
+        import dailyriff_api.routers.coppa as mod
+        monkeypatch.setattr(mod, "service_transaction", _make_svc_ctx(
+            fetchrow_results=[PARENT_ROW]
+        ))
+
+        token = make_test_jwt(user_id=USER_A_ID)
+        resp = client.post(
+            "/coppa/signed-form",
+            json={
+                "consent_id": str(CONSENT_ID),
+                "form_url": "http://example.com/form.pdf",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 400
+        assert "HTTPS" in resp.json()["detail"]
+
     def test_signed_form_verifies_consent(
         self, client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
     ) -> None:

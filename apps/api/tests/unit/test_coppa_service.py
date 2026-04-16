@@ -76,78 +76,35 @@ class TestInitiateConsent:
         mock_stripe.create_setup_intent.assert_awaited_once()
 
 
-class TestConfirmConsent:
-    @pytest.mark.asyncio
-    async def test_confirm_transitions_pending_to_verified(self) -> None:
-        consent_id = uuid4()
-        now = datetime.now(tz.utc)
-        pending_row = {
-            "id": consent_id,
-            "parent_id": PARENT_ID,
-            "child_id": CHILD_ID,
-            "studio_id": STUDIO_ID,
-            "status": "pending",
-            "stripe_setup_intent_id": "seti_test_123",
-            "form_url": None,
-            "verified_at": None,
-            "revoked_at": None,
-            "revocation_auto_delete_at": None,
-            "created_at": now,
-            "updated_at": now,
-        }
-        verified_row = {**pending_row, "status": "verified", "verified_at": now}
+class TestConfirmConsentRemoved:
+    """confirm_consent was removed — confirmation only via webhook (server-side Stripe verification)."""
 
-        svc = CoppaService(stripe_client=MagicMock())
-
-        with patch(
-            "dailyriff_api.services.coppa_service.service_transaction",
-            _mock_service_tx(fetchrow_side_effect=[pending_row, verified_row]),
-        ):
-            result = await svc.confirm_consent(
-                consent_id=consent_id,
-                setup_intent_id="seti_test_123",
-                parent_id=PARENT_ID,
-            )
-
-        assert result is not None
-        assert result["status"] == "verified"
-        assert result["verified_at"] is not None
-
-    @pytest.mark.asyncio
-    async def test_confirm_rejects_non_pending_consent(self) -> None:
-        consent_id = uuid4()
-        now = datetime.now(tz.utc)
-        already_verified_row = {
-            "id": consent_id,
-            "parent_id": PARENT_ID,
-            "child_id": CHILD_ID,
-            "studio_id": STUDIO_ID,
-            "status": "verified",
-            "stripe_setup_intent_id": "seti_test_123",
-            "form_url": None,
-            "verified_at": now,
-            "revoked_at": None,
-            "revocation_auto_delete_at": None,
-            "created_at": now,
-            "updated_at": now,
-        }
-
-        svc = CoppaService(stripe_client=MagicMock())
-
-        with patch(
-            "dailyriff_api.services.coppa_service.service_transaction",
-            _mock_service_tx(fetchrow_result=already_verified_row),
-        ):
-            result = await svc.confirm_consent(
-                consent_id=consent_id,
-                setup_intent_id="seti_test_123",
-                parent_id=PARENT_ID,
-            )
-
-        assert result is None
+    def test_confirm_consent_method_does_not_exist(self) -> None:
+        svc = CoppaService()
+        assert not hasattr(svc, "confirm_consent")
 
 
 class TestSignedFormEscapeHatch:
+    @pytest.mark.asyncio
+    async def test_submit_signed_form_rejects_non_https_url(self) -> None:
+        svc = CoppaService()
+        with pytest.raises(ValueError, match="HTTPS"):
+            await svc.submit_signed_form(
+                consent_id=uuid4(),
+                form_url="http://example.com/form.pdf",
+                parent_id=PARENT_ID,
+            )
+
+    @pytest.mark.asyncio
+    async def test_submit_signed_form_rejects_malformed_url(self) -> None:
+        svc = CoppaService()
+        with pytest.raises(ValueError, match="HTTPS"):
+            await svc.submit_signed_form(
+                consent_id=uuid4(),
+                form_url="not-a-url",
+                parent_id=PARENT_ID,
+            )
+
     @pytest.mark.asyncio
     async def test_submit_signed_form_verifies_consent(self) -> None:
         consent_id = uuid4()

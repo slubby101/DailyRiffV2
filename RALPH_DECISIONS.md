@@ -114,6 +114,10 @@ changelog.
 - **Decision:** Switched slowapi storage from hardcoded `memory://` to `_resolve_storage_uri()` which reads `REDIS_URL` env var. Falls back to `memory://` when env var is unset or empty. Added `redis>=5.0` to dependencies. `REDIS_URL` was already in `.env.example` from Stage 0. No API surface change — purely internal storage backend swap. Module-level `limiter` and `create_limiter()` both call the resolver at import/call time.
 - **Next:** Remaining unblocked: #37, #39, #43, #44, #45, #46, #47, #48, #49, #75.
 
+### 2026-04-16 UTC / iteration #18 of PRD #16 / closed #77
+- **Decision:** Security fix: removed `/coppa/confirm` endpoint entirely (Option A from the bug report). COPPA consent confirmation now only possible via the Stripe webhook path which has server-side signature verification. Also added HTTPS-only URL validation to the signed-form escape hatch endpoint — rejects non-HTTPS and malformed URLs before hitting the DB. Removed `confirm_consent` method from `CoppaService` and `CoppaConfirmRequest` schema. OpenAPI snapshot + api-client types regenerated.
+- **Next:** #79 (Stripe webhook idempotency claim-before-process bug) is another COPPA security fix that should be addressed next.
+
 ### 2026-04-16 UTC / iteration #17 of PRD #16 / closed #45
 - **Decision:** Payments router under `/studios/{studio_id}/payments` using `service_transaction()` (same pattern as teacher_students/loans). `payments` table (migration 0016) with `payment_status` enum {pending, paid, refunded}, NUMERIC(10,2) amount, currency=USD default. Outstanding balance endpoint uses SQL SUM+CASE aggregation per status. Refund endpoint sets status='refunded' + refunded_at atomically. Outstanding route registered before `{payment_id}` to avoid FastAPI path conflict. No separate `payment_service.py` — no business logic beyond CRUD. 14 unit tests covering CRUD, refund, outstanding balance, access control (teacher/owner only, 403 for students/non-members), and 401 for unauthenticated.
 - **Blocker:** OneDrive EIO on pnpm install (same as prior iterations); codegen via /tmp workaround.

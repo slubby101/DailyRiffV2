@@ -100,11 +100,12 @@ async def update_employee(
     body: EmployeeUpdateRequest,
     user: CurrentUser = Depends(require_superadmin),
 ) -> EmployeeResponse:
+    _UPDATABLE_COLUMNS = {"role", "notes"}
     updates = body.model_dump(exclude_none=True)
     if not updates:
         return await get_employee(employee_id, user)
 
-    columns = list(updates.keys())
+    columns = [c for c in updates if c in _UPDATABLE_COLUMNS]
     values = [updates[c] for c in columns]
 
     set_clause = ", ".join(f"{col} = ${i + 2}" for i, col in enumerate(columns))

@@ -16,6 +16,15 @@ DEFAULT_CAPS: dict[str, int] = {
 }
 
 
+_ALLOWED_TABLES: dict[str, set[str]] = {
+    "recordings": {"student_id", "user_id"},
+    "messages": {"sender_id", "user_id"},
+    "waitlist_entries": {"email", "ip_address"},
+    "user_push_subscriptions": {"user_id"},
+    "coppa_consents": {"parent_id"},
+}
+
+
 class BusinessCapsService:
     def __init__(self, *, settings_service: Any | None = None) -> None:
         self._settings = settings_service
@@ -36,6 +45,12 @@ class BusinessCapsService:
         entity_column: str,
         time_window: str = "today",
     ) -> bool:
+        allowed_cols = _ALLOWED_TABLES.get(table)
+        if allowed_cols is None:
+            raise ValueError(f"Table {table!r} not in business caps allowlist")
+        if entity_column not in allowed_cols:
+            raise ValueError(f"Column {entity_column!r} not allowed for table {table!r}")
+
         cap = await self._get_cap(cap_key)
 
         if time_window == "today":
@@ -45,7 +60,7 @@ class BusinessCapsService:
 
         async with service_transaction() as conn:
             count = await conn.fetchval(
-                f"SELECT COUNT(*) FROM {table} "  # noqa: S608
+                f"SELECT COUNT(*) FROM {table} "
                 f"WHERE {entity_column} = $1 {where_time}",
                 entity_id,
             )

@@ -8,6 +8,7 @@ shared secret.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import time
@@ -36,6 +37,7 @@ _bearer = HTTPBearer(auto_error=False)
 _JWKS_TTL_SECONDS = 300
 _jwks_cache: dict | None = None
 _jwks_cache_time: float = 0.0
+_jwks_lock = asyncio.Lock()
 
 
 @dataclass(frozen=True)
@@ -77,9 +79,13 @@ async def _get_jwks() -> dict:
     now = time.monotonic()
     if _jwks_cache is not None and (now - _jwks_cache_time) < _JWKS_TTL_SECONDS:
         return _jwks_cache
-    _jwks_cache = await _fetch_jwks_raw()
-    _jwks_cache_time = now
-    return _jwks_cache
+    async with _jwks_lock:
+        now = time.monotonic()
+        if _jwks_cache is not None and (now - _jwks_cache_time) < _JWKS_TTL_SECONDS:
+            return _jwks_cache
+        _jwks_cache = await _fetch_jwks_raw()
+        _jwks_cache_time = now
+        return _jwks_cache
 
 
 def _find_jwk_by_kid(jwks: dict, kid: str) -> dict | None:
@@ -124,14 +130,14 @@ async def _decode_token(token: str) -> dict:
         )
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> CurrentUser:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise _unauthorized()
 
     try:
-        payload = _decode_token_sync(credentials.credentials)
+        payload = await _decode_token(credentials.credentials)
     except jwt.ExpiredSignatureError as exc:
         raise _unauthorized("Token expired") from exc
     except jwt.InvalidTokenError as exc:
@@ -162,37 +168,6 @@ def get_current_user(
     )
 
 
-def _decode_token_sync(token: str) -> dict:
-    """Synchronous token decode — HS256 tokens don't need async.
-
-    For ES256 tokens (with kid), we run the async JWKS fetch in a new event loop
-    since FastAPI's sync dependencies don't run in an async context.
-    """
-    import asyncio
-
-    unverified_header = jwt.get_unverified_header(token)
-    kid = unverified_header.get("kid")
-
-    if kid:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-
-        if loop and loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(asyncio.run, _decode_token(token))
-                return future.result()
-        else:
-            return asyncio.run(_decode_token(token))
-    else:
-        return jwt.decode(
-            token,
-            _jwt_secret(),
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +181,7 @@ SUPERADMIN_RESPONSES: dict[int | str, dict] = {
 
 
 def _is_dev_or_staging() -> bool:
-    env = os.environ.get("ENVIRONMENT", "development").lower()
+    env = os.environ.get("ENVIRONMENT", "").lower()
     return env in ("development", "staging", "test")
 
 

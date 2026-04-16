@@ -20,6 +20,18 @@ from dailyriff_api.services.notifications import NotificationPayload, Notificati
 logger = logging.getLogger(__name__)
 
 
+class _SafeFormatMap(dict):
+    """Restricts str.format_map to simple key lookup only — no attribute or index access."""
+
+    def __getitem__(self, key: str) -> str:
+        if not isinstance(key, str) or not key.isidentifier():
+            raise KeyError(key)
+        return super().__getitem__(key)
+
+    def __getattr__(self, name: str) -> None:
+        raise AttributeError(name)
+
+
 class EventType(str, enum.Enum):
     # Teacher events
     TEACHER_NEW_RECORDING = "teacher.new_recording"
@@ -65,8 +77,16 @@ class NotificationEventService:
             return
 
         ctx = context or {}
-        title = template["title_template"].format(**ctx)
-        body = template["body_template"].format(**ctx)
+        try:
+            title = template["title_template"].format_map(
+                _SafeFormatMap(ctx)
+            )
+            body = template["body_template"].format_map(
+                _SafeFormatMap(ctx)
+            )
+        except (KeyError, ValueError, IndexError) as exc:
+            logger.error("Template render failed for %s: %s", event_type.value, exc)
+            return
 
         category = template["category"]
         channels = template["channels"]

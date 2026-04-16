@@ -17,46 +17,35 @@ from dailyriff_api.services.idempotency import (
 )
 
 
-def _mock_service_tx(*, fetchval_result=None, execute_result="INSERT 1"):
+def _mock_service_tx(*, fetchrow_result=None):
     @asynccontextmanager
     async def _fake():
         conn = AsyncMock()
-        conn.fetchval = AsyncMock(return_value=fetchval_result)
-        conn.execute = AsyncMock(return_value=execute_result)
+        conn.fetchrow = AsyncMock(return_value=fetchrow_result)
         yield conn
     return _fake
 
 
 class TestIdempotencyCheck:
     @pytest.mark.asyncio
-    async def test_new_event_is_not_duplicate(self) -> None:
+    async def test_claim_new_event_returns_true(self) -> None:
         svc = IdempotencyService()
         with patch(
             "dailyriff_api.services.idempotency.service_transaction",
-            _mock_service_tx(fetchval_result=None),
+            _mock_service_tx(fetchrow_result={"event_id": "evt_123"}),
         ):
-            is_dup = await svc.is_duplicate("stripe", "evt_123")
-        assert is_dup is False
+            claimed = await svc.claim_event("stripe", "evt_123")
+        assert claimed is True
 
     @pytest.mark.asyncio
-    async def test_existing_event_is_duplicate(self) -> None:
+    async def test_claim_duplicate_event_returns_false(self) -> None:
         svc = IdempotencyService()
         with patch(
             "dailyriff_api.services.idempotency.service_transaction",
-            _mock_service_tx(fetchval_result="evt_123"),
+            _mock_service_tx(fetchrow_result=None),
         ):
-            is_dup = await svc.is_duplicate("stripe", "evt_123")
-        assert is_dup is True
-
-    @pytest.mark.asyncio
-    async def test_record_event_stores_to_db(self) -> None:
-        svc = IdempotencyService()
-        mock_tx = _mock_service_tx()
-        with patch(
-            "dailyriff_api.services.idempotency.service_transaction",
-            mock_tx,
-        ):
-            await svc.record_event("stripe", "evt_456")
+            claimed = await svc.claim_event("stripe", "evt_123")
+        assert claimed is False
 
 
 class TestStripeSignatureVerification:

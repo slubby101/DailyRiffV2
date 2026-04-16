@@ -12,24 +12,16 @@ STRIPE_TIMESTAMP_TOLERANCE = 300
 
 
 class IdempotencyService:
-    async def is_duplicate(self, provider: str, event_id: str) -> bool:
+    async def claim_event(self, provider: str, event_id: str) -> bool:
+        """Atomically claim an event. Returns True if this is the first claim (not a duplicate)."""
         async with service_transaction() as conn:
-            existing = await conn.fetchval(
-                "SELECT event_id FROM idempotency_log "
-                "WHERE provider = $1 AND event_id = $2",
-                provider,
-                event_id,
-            )
-        return existing is not None
-
-    async def record_event(self, provider: str, event_id: str) -> None:
-        async with service_transaction() as conn:
-            await conn.execute(
+            row = await conn.fetchrow(
                 "INSERT INTO idempotency_log (provider, event_id) "
-                "VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                "VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING event_id",
                 provider,
                 event_id,
             )
+        return row is not None
 
 
 def verify_stripe_signature(
@@ -43,7 +35,11 @@ def verify_stripe_signature(
     if not timestamp or not signature:
         return False
 
-    if abs(time.time() - int(timestamp)) > STRIPE_TIMESTAMP_TOLERANCE:
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > STRIPE_TIMESTAMP_TOLERANCE:
         return False
 
     signed_payload = f"{timestamp}.".encode() + payload

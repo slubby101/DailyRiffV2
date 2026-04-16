@@ -43,9 +43,9 @@ class MfaAlertService:
             # Count failures in the window
             count = await conn.fetchval(
                 "SELECT COUNT(*) FROM mfa_failure_log "
-                "WHERE user_id = $1 AND created_at > now() - interval '%s minutes'"
-                % WINDOW_MINUTES,
+                "WHERE user_id = $1 AND created_at > now() - make_interval(mins => $2)",
                 user_id,
+                WINDOW_MINUTES,
             )
 
             alert_triggered = count >= FAILURE_THRESHOLD

@@ -14,7 +14,10 @@ async def verify_hcaptcha(
     sitekey: str | None = None,
 ) -> bool:
     if secret is None:
-        return True
+        import os
+        if os.environ.get("ENVIRONMENT", "").lower() in ("development", "staging", "test"):
+            return True
+        return False
 
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:

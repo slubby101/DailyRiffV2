@@ -65,10 +65,24 @@ async def create_conversation(
                 detail="Failed to create conversation",
             )
         conv_id = row["id"]
-        all_participants = [user.id] + [
+        all_participant_ids = [user.id] + [
             p for p in body.participant_ids if p != user.id
         ]
-        for pid in all_participants:
+        if len(all_participant_ids) > 1:
+            studio_members = await conn.fetch(
+                "SELECT user_id FROM studio_members "
+                "WHERE studio_id = $1 AND user_id = ANY($2::uuid[])",
+                body.studio_id,
+                all_participant_ids,
+            )
+            valid_ids = {r["user_id"] for r in studio_members} | {user.id}
+            invalid = [p for p in all_participant_ids if p not in valid_ids]
+            if invalid:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Some participants are not members of this studio",
+                )
+        for pid in all_participant_ids:
             await conn.execute(
                 "INSERT INTO conversation_participants (conversation_id, user_id) "
                 "VALUES ($1, $2)",

@@ -91,6 +91,10 @@ async def suspend_studio(
     """Suspend a studio (superadmin, bypasses RLS)."""
     now = datetime.now(tz.utc)
     async with service_transaction() as conn:
+        prev = await conn.fetchval(
+            "SELECT state FROM studios WHERE id = $1",
+            studio_id,
+        )
         row = await conn.fetchrow(
             f"UPDATE studios SET state = 'suspended', updated_at = $2 "
             f"WHERE id = $1 RETURNING {STUDIO_COLUMNS}",
@@ -106,7 +110,7 @@ async def suspend_studio(
             "suspend",
             "studio",
             str(studio_id),
-            {"previous_state": "unknown"},
+            {"previous_state": prev},
         )
     return StudioResponse(**dict(row))
 

@@ -8,8 +8,43 @@
 import { getWebEnv } from "@/lib/env";
 
 export function getApiBaseUrl(): string {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (apiUrl) return apiUrl;
   const { supabaseUrl } = getWebEnv();
-  return supabaseUrl.replace(":54321", ":8000");
+  const url = new URL(supabaseUrl);
+  if (url.port === "54321") {
+    url.port = "8000";
+  }
+  return url.origin;
+}
+
+function getAccessToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF;
+  if (projectRef) {
+    const key = `sb-${projectRef}-auth-token`;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed?.access_token ?? null;
+      } catch {
+        return null;
+      }
+    }
+  }
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k?.startsWith("sb-") && k.endsWith("-auth-token")) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(k) ?? "");
+        return parsed?.access_token ?? null;
+      } catch {
+        continue;
+      }
+    }
+  }
+  return null;
 }
 
 export async function apiFetch<T>(
@@ -17,10 +52,7 @@ export async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const base = getApiBaseUrl();
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("supabase_access_token")
-      : null;
+  const token = getAccessToken();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

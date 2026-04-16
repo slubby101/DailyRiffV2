@@ -14,7 +14,7 @@ from slowapi.errors import RateLimitExceeded
 
 from dailyriff_api.db import close_pool, init_pool
 from dailyriff_api.rate_limit import limiter, rate_limit_exceeded_handler
-from dailyriff_api.routers import account_conversion, admin, assignments, coppa, devices, employees, health, invitations, messaging, notification_templates, payments, preferences, recordings, resources, settings, studios, teacher_students, waitlist
+from dailyriff_api.routers import account_conversion, admin, assignments, coppa, devices, employees, health, impersonation, invitations, messaging, notification_templates, payments, preferences, recordings, resources, settings, studios, teacher_students, waitlist
 
 
 @asynccontextmanager
@@ -55,6 +55,8 @@ app.include_router(coppa.router)
 app.include_router(health.router)
 app.include_router(devices.router)
 app.include_router(employees.router)
+app.include_router(impersonation.router)
+app.include_router(impersonation.access_log_router)
 app.include_router(preferences.router)
 app.include_router(settings.router)
 app.include_router(studios.router)

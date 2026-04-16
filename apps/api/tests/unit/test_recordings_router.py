@@ -336,3 +336,67 @@ def test_playback_url_returns_404_for_missing_recording(
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 404
+
+
+# ---- Soft-delete endpoint tests ----
+
+
+def test_soft_delete_recording_sets_deleted_at(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+
+    deleted_row = {**RECORDING_ROW, "deleted_at": NOW}
+    monkeypatch.setattr(
+        rec_mod, "rls_transaction", _make_rls_ctx(fetchrow_result=deleted_row)
+    )
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.delete(
+        f"/recordings/{RECORDING_ID}",
+        params={"confirmation_text": "DELETE"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["deleted_at"] is not None
+
+
+def test_soft_delete_recording_requires_delete_confirmation(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+
+    monkeypatch.setattr(
+        rec_mod, "rls_transaction", _make_rls_ctx(fetchrow_result=RECORDING_ROW)
+    )
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.delete(
+        f"/recordings/{RECORDING_ID}",
+        params={"confirmation_text": "wrong"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 400
+
+
+def test_soft_delete_recording_not_found(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+
+    monkeypatch.setattr(
+        rec_mod, "rls_transaction", _make_rls_ctx(fetchrow_result=None)
+    )
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.delete(
+        f"/recordings/{uuid.uuid4()}",
+        params={"confirmation_text": "DELETE"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 404
+
+
+def test_soft_delete_unauthenticated_rejected(client: TestClient) -> None:
+    resp = client.delete(f"/recordings/{uuid.uuid4()}")
+    assert resp.status_code == 401

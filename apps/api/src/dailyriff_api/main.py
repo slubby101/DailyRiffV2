@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from dailyriff_api.db import close_pool, init_pool
-from dailyriff_api.routers import devices, health, preferences, settings, studios
+from dailyriff_api.routers import devices, health, preferences, resources, settings, studios
 
 
 @asynccontextmanager
@@ -48,3 +48,4 @@ app.include_router(devices.router)
 app.include_router(preferences.router)
 app.include_router(settings.router)
 app.include_router(studios.router)
+app.include_router(resources.router)

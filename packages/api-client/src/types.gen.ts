@@ -58,6 +58,33 @@ export type PreferencesUpdateRequest = {
     web_push_enabled?: (boolean | null);
 };
 
+export type ResourceCreateRequest = {
+    category?: (string | null);
+    description?: (string | null);
+    studio_id: string;
+    title: string;
+    url: string;
+};
+
+export type ResourceResponse = {
+    category?: (string | null);
+    created_at: string;
+    created_by?: (string | null);
+    description?: (string | null);
+    id: string;
+    studio_id: string;
+    title: string;
+    updated_at: string;
+    url: string;
+};
+
+export type ResourceUpdateRequest = {
+    category?: (string | null);
+    description?: (string | null);
+    title?: (string | null);
+    url?: (string | null);
+};
+
 export type SettingCreateRequest = {
     category: 'rate_limits' | 'business_rule_caps' | 'notification_delays' | 'coppa_grace_windows';
     description?: (string | null);

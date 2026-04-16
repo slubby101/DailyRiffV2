@@ -90,6 +90,10 @@ export type HealthResponse = {
     version: string;
 };
 
+export type HTTPValidationError = {
+    detail?: Array<ValidationError>;
+};
+
 export type MessageCreateRequest = {
     body: string;
 };
@@ -209,4 +213,61 @@ export type StudioUpdateRequest = {
     logo_url?: (string | null);
     primary_color?: (string | null);
     timezone?: (string | null);
+};
+
+export type ValidationError = {
+    ctx?: {
+        [key: string]: unknown;
+    };
+    input?: unknown;
+    loc: Array<(string | number)>;
+    msg: string;
+    type: string;
+};
+
+export type WaitlistBypassCreateRequest = {
+    email: string;
+    name: string;
+    studio_name?: (string | null);
+};
+
+export type WaitlistEntryResponse = {
+    bypass_token: (string | null);
+    created_at: string;
+    email: string;
+    id: string;
+    ip_address: (string | null);
+    name: string;
+    rejection_reason: (string | null);
+    reviewed_at: (string | null);
+    reviewed_by: (string | null);
+    status: 'pending' | 'approved' | 'rejected' | 'invited';
+    studio_id: (string | null);
+    studio_name: (string | null);
+    updated_at: string;
+};
+
+export type status = 'pending' | 'approved' | 'rejected' | 'invited';
+
+export type WaitlistMessageRequest = {
+    body: string;
+};
+
+export type WaitlistMessageResponse = {
+    body: string;
+    created_at: string;
+    id: string;
+    sender_id: string;
+    waitlist_entry_id: string;
+};
+
+export type WaitlistRejectRequest = {
+    reason?: (string | null);
+};
+
+export type WaitlistSubmitRequest = {
+    captcha_token?: (string | null);
+    email: string;
+    name: string;
+    studio_name?: (string | null);
 };

@@ -11,6 +11,7 @@ import {
   UserCog,
   Settings,
   ClipboardCheck,
+  ListOrdered,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
     label: "Verification Queue",
     icon: ClipboardCheck,
   },
+  { href: "/waitlist", label: "Waitlist", icon: ListOrdered },
 ] as const;
 
 export default function SuperadminLayout({

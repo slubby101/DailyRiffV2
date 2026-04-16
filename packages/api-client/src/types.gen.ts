@@ -79,6 +79,43 @@ export type ConversationResponse = {
     updated_at: string;
 };
 
+export type ConversionEligibilityResponse = {
+    current: 'minor' | 'teen' | 'adult';
+    conversions: Array<ConversionOption>;
+};
+
+export type current = 'minor' | 'teen' | 'adult';
+
+export type ConversionOption = {
+    target: 'minor' | 'teen' | 'adult';
+    requires_parent_consent: boolean;
+    requires_new_credentials: boolean;
+    message: string;
+};
+
+export type target = 'minor' | 'teen' | 'adult';
+
+export type ConvertRequest = {
+    target_age_class: 'minor' | 'teen' | 'adult';
+    parent_consent_given?: boolean;
+    new_email?: (string | null);
+};
+
+export type target_age_class = 'minor' | 'teen' | 'adult';
+
+export type ConvertResponse = {
+    child_user_id: string;
+    studio_id: string;
+    previous_age_class: 'minor' | 'teen' | 'adult';
+    new_age_class: 'minor' | 'teen' | 'adult';
+    parent_access_removed: boolean;
+    message: string;
+};
+
+export type previous_age_class = 'minor' | 'teen' | 'adult';
+
+export type new_age_class = 'minor' | 'teen' | 'adult';
+
 export type CoppaConsentResponse = {
     id: string;
     parent_id: string;

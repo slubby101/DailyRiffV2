@@ -126,3 +126,8 @@ changelog.
 ### 2026-04-16 UTC / iteration #19 of PRD #16 / closed #79
 - **Decision:** Bug #79 was already addressed in the initial COPPA webhook implementation (iteration #14) — claim INSERT and `confirm_via_webhook` share the same `service_transaction()` block, so a processing failure rolls back both. Added two regression tests: (1) processing failure propagates as 500 (proving no silent swallow), (2) same `conn` object passed to both claim INSERT and `confirm_via_webhook` (proving single-transaction atomicity). No code change needed, only test coverage.
 - **Next:** Remaining unblocked: #37, #39, #43, #44, #46, #47, #48, #49, #50, #75.
+
+### 2026-04-16 UTC / iteration #20 of PRD #16 / closed #46
+- **Decision:** Account conversion built as pure domain service (`AccountConversionService`) with static transition rules table — no state machine, just a dict of `(current, target) → requirements`. Three valid transitions: minor→teen (parent consent), minor→adult (consent + email), teen→adult (email). Adult conversion auto-deletes `parent_children` rows for the studio. Migration 0017 adds `age_class` + `updated_at` to `studio_members` (nullable — only students use it). Router at `/studios/{id}/students/{id}/conversion-eligibility` (GET) + `/convert` (POST), teacher/owner only. `AccountConversionDialog` component wired into teacher student detail page. 36 unit tests covering full eligibility matrix, message content, convert validation, activity logging, and router access control.
+- **Blocker:** OneDrive EIO on pnpm install (same as prior iterations); codegen via /tmp workaround.
+- **Next:** Remaining unblocked: #37, #39, #43, #44, #47, #48, #49, #50, #75.

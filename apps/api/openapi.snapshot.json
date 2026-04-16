@@ -5,6 +5,144 @@
     "version": "0.0.0"
   },
   "paths": {
+    "/studios/{studio_id}/students/{child_user_id}/conversion-eligibility": {
+      "get": {
+        "tags": [
+          "account-conversion"
+        ],
+        "summary": "Get Conversion Eligibility",
+        "description": "Check what account conversions are available for a student.",
+        "operationId": "get_conversion_eligibility_studios__studio_id__students__child_user_id__conversion_eligibility_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Studio Id"
+            }
+          },
+          {
+            "name": "child_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Child User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionEligibilityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          },
+          "404": {
+            "description": "Student not found in studio"
+          }
+        }
+      }
+    },
+    "/studios/{studio_id}/students/{child_user_id}/convert": {
+      "post": {
+        "tags": [
+          "account-conversion"
+        ],
+        "summary": "Convert Account",
+        "description": "Perform a manual account conversion for a student.",
+        "operationId": "convert_account_studios__studio_id__students__child_user_id__convert_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "studio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Studio Id"
+            }
+          },
+          {
+            "name": "child_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Child User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvertResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Conversion requirements not met"
+          },
+          "404": {
+            "description": "Student not found"
+          }
+        }
+      }
+    },
     "/admin/studios": {
       "get": {
         "tags": [
@@ -5146,6 +5284,153 @@
           "updated_at"
         ],
         "title": "ConversationResponse"
+      },
+      "ConversionEligibilityResponse": {
+        "properties": {
+          "current": {
+            "type": "string",
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Current"
+          },
+          "conversions": {
+            "items": {
+              "$ref": "#/components/schemas/ConversionOption"
+            },
+            "type": "array",
+            "title": "Conversions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "current",
+          "conversions"
+        ],
+        "title": "ConversionEligibilityResponse"
+      },
+      "ConversionOption": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Target"
+          },
+          "requires_parent_consent": {
+            "type": "boolean",
+            "title": "Requires Parent Consent"
+          },
+          "requires_new_credentials": {
+            "type": "boolean",
+            "title": "Requires New Credentials"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target",
+          "requires_parent_consent",
+          "requires_new_credentials",
+          "message"
+        ],
+        "title": "ConversionOption"
+      },
+      "ConvertRequest": {
+        "properties": {
+          "target_age_class": {
+            "type": "string",
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Target Age Class"
+          },
+          "parent_consent_given": {
+            "type": "boolean",
+            "title": "Parent Consent Given",
+            "default": false
+          },
+          "new_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_age_class"
+        ],
+        "title": "ConvertRequest"
+      },
+      "ConvertResponse": {
+        "properties": {
+          "child_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Child User Id"
+          },
+          "studio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Studio Id"
+          },
+          "previous_age_class": {
+            "type": "string",
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Previous Age Class"
+          },
+          "new_age_class": {
+            "type": "string",
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "New Age Class"
+          },
+          "parent_access_removed": {
+            "type": "boolean",
+            "title": "Parent Access Removed"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "child_user_id",
+          "studio_id",
+          "previous_age_class",
+          "new_age_class",
+          "parent_access_removed",
+          "message"
+        ],
+        "title": "ConvertResponse"
       },
       "CoppaConsentResponse": {
         "properties": {

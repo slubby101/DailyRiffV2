@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
-import json
 import os
 import secrets
 import sys
@@ -245,7 +244,7 @@ async def _seed_edge_cases(conn: asyncpg.Connection) -> None:
         ON CONFLICT (id) DO NOTHING
     """, ASSIGN_MID, STUDIO_ID, ELLEN_ID, MID_CONVERSION_STUDENT_ID,
         "Practice Minuet in G", "Work on the left hand accompaniment pattern.",
-        json.dumps(["Minuet in G"]), json.dumps(["hand independence"]),
+        ["Minuet in G"], ["hand independence"],
         _days_from_now(7), "active")
 
     # =========================================================================
@@ -312,7 +311,7 @@ async def _seed_edge_cases(conn: asyncpg.Connection) -> None:
         ON CONFLICT (id) DO NOTHING
     """, ASSIGN_FAIL, STUDIO_ID, ELLEN_ID, FAILED_UPLOAD_STUDENT_ID,
         "Practice Sonatina in C", "Focus on the exposition section.",
-        json.dumps(["Sonatina in C"]), json.dumps(["sonata form"]),
+        ["Sonatina in C"], ["sonata form"],
         _days_from_now(5), "active")
 
     # Recording with uploaded_at = NULL (upload was interrupted)

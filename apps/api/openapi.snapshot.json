@@ -1193,6 +1193,269 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/admin/studios": {
+      "get": {
+        "description": "List all studios across the platform (bypasses RLS).",
+        "operationId": "list_all_studios_admin_studios_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudioResponse"
+                  },
+                  "title": "Response List All Studios Admin Studios Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List All Studios",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/studios/{studio_id}": {
+      "get": {
+        "description": "Get a single studio by ID (bypasses RLS).",
+        "operationId": "get_studio_admin_studios__studio_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Studio",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/studios/{studio_id}/suspend": {
+      "post": {
+        "description": "Suspend a studio (superadmin, bypasses RLS).",
+        "operationId": "suspend_studio_admin_studios__studio_id__suspend_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Suspend Studio",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/studios/{studio_id}/verify": {
+      "post": {
+        "description": "Verify/activate a studio (superadmin, bypasses RLS).",
+        "operationId": "verify_studio_admin_studios__studio_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Studio",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/verification-queue": {
+      "get": {
+        "description": "List studios awaiting verification.",
+        "operationId": "list_pending_studios_admin_verification_queue_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudioResponse"
+                  },
+                  "title": "Response List Pending Studios Admin Verification Queue Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Pending Studios",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/conversations": {
       "get": {
         "operationId": "list_conversations_conversations_get",

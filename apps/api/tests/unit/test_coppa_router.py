@@ -309,6 +309,114 @@ class TestStripeWebhook:
         assert resp.json()["received"] is True
         mock_svc.confirm_via_webhook.assert_awaited_once()
 
+    def test_webhook_processing_failure_propagates_so_claim_rolls_back(
+        self, client: TestClient, monkeypatch
+    ) -> None:
+        """If confirm_via_webhook raises, the exception must propagate out of the
+        service_transaction block.  Since claim INSERT and processing share the
+        same transaction, a rollback releases the idempotency claim — allowing
+        Stripe retries to re-process the event instead of silently discarding it.
+        """
+        import dailyriff_api.routers.coppa as mod
+        secret = "whsec_test_secret"
+        monkeypatch.setattr(mod, "_get_stripe_webhook_secret", lambda: secret)
+
+        # CoppaService.confirm_via_webhook raises a DB error
+        mock_svc = MagicMock()
+        mock_svc.confirm_via_webhook = AsyncMock(
+            side_effect=RuntimeError("DB temporarily unavailable")
+        )
+        monkeypatch.setattr(mod, "CoppaService", lambda: mock_svc)
+
+        # Idempotency claim succeeds (first attempt)
+        @asynccontextmanager
+        async def _svc_ctx():
+            conn = AsyncMock()
+            conn.fetchrow = AsyncMock(return_value={"event_id": "evt_fail_123"})
+            conn.execute = AsyncMock(return_value="INSERT 1")
+            yield conn
+
+        monkeypatch.setattr(mod, "service_transaction", _svc_ctx)
+
+        payload = json.dumps({
+            "id": "evt_fail_123",
+            "type": "setup_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "seti_test_fail",
+                    "metadata": {"purpose": "coppa_vpc"},
+                }
+            },
+        }).encode()
+
+        sig_header = self._make_signed_payload(payload, secret)
+
+        resp = client.post(
+            "/coppa/webhook/stripe",
+            content=payload,
+            headers={"stripe-signature": sig_header},
+        )
+
+        # The handler must NOT swallow the error — a 500 means the transaction
+        # rolled back (including the idempotency claim), so Stripe will retry.
+        assert resp.status_code == 500
+        mock_svc.confirm_via_webhook.assert_awaited_once()
+
+    def test_webhook_passes_same_conn_to_confirm_for_atomic_claim(
+        self, client: TestClient, monkeypatch
+    ) -> None:
+        """Verify confirm_via_webhook receives the same connection used for the
+        idempotency claim, ensuring both operations share one transaction."""
+        import dailyriff_api.routers.coppa as mod
+        secret = "whsec_test_secret"
+        monkeypatch.setattr(mod, "_get_stripe_webhook_secret", lambda: secret)
+
+        captured_conn = None
+
+        mock_svc = MagicMock()
+
+        async def _capture_confirm(*, setup_intent_id, conn):
+            nonlocal captured_conn
+            captured_conn = conn
+            return VERIFIED_CONSENT_ROW
+
+        mock_svc.confirm_via_webhook = AsyncMock(side_effect=_capture_confirm)
+        monkeypatch.setattr(mod, "CoppaService", lambda: mock_svc)
+
+        txn_conn = AsyncMock()
+        txn_conn.fetchrow = AsyncMock(return_value={"event_id": "evt_conn_123"})
+        txn_conn.execute = AsyncMock(return_value="INSERT 1")
+
+        @asynccontextmanager
+        async def _svc_ctx():
+            yield txn_conn
+
+        monkeypatch.setattr(mod, "service_transaction", _svc_ctx)
+
+        payload = json.dumps({
+            "id": "evt_conn_123",
+            "type": "setup_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": "seti_conn_test",
+                    "metadata": {"purpose": "coppa_vpc"},
+                }
+            },
+        }).encode()
+
+        sig_header = self._make_signed_payload(payload, secret)
+
+        resp = client.post(
+            "/coppa/webhook/stripe",
+            content=payload,
+            headers={"stripe-signature": sig_header},
+        )
+
+        assert resp.status_code == 200
+        # The conn passed to confirm_via_webhook must be the SAME object
+        # used for the idempotency INSERT — proving they share one transaction.
+        assert captured_conn is txn_conn
+
     def test_webhook_duplicate_event_is_idempotent(
         self, client: TestClient, monkeypatch
     ) -> None:

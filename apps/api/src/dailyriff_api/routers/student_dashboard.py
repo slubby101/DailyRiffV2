@@ -46,6 +46,7 @@ async def get_student_dashboard(
             "SELECT DATE(uploaded_at AT TIME ZONE 'UTC') as practice_date "
             "FROM recordings WHERE student_id = $1 AND uploaded_at IS NOT NULL "
             "AND deleted_at IS NULL "
+            "AND uploaded_at >= now() - interval '1 year' "
             "ORDER BY uploaded_at DESC",
             user.id,
         )

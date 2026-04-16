@@ -7,6 +7,7 @@ T-7/T-1 reminders → T-0 hard-delete. Parent can cancel any time before T-0.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import secrets
 from datetime import datetime, timedelta, timezone as tz
 from typing import Any
@@ -56,19 +57,21 @@ class CoppaDeletionService:
         conn: Any,
         request_id: UUID,
         confirmation_token: str,
+        parent_id: UUID,
         grace_days: int = _DEFAULT_GRACE_DAYS,
     ) -> dict[str, Any] | None:
         """Confirm a pending deletion request via email token. Schedules hard-delete."""
         row = await conn.fetchrow(
             f"SELECT {COPPA_DELETION_COLUMNS} FROM coppa_deletion_requests "
-            f"WHERE id = $1",
+            f"WHERE id = $1 AND parent_id = $2",
             request_id,
+            parent_id,
         )
         if row is None or row["status"] != "pending_confirmation":
             return None
 
         token_hash = hashlib.sha256(confirmation_token.encode()).hexdigest()
-        if token_hash != row["confirmation_token_hash"]:
+        if not hmac.compare_digest(token_hash, row["confirmation_token_hash"]):
             return None
 
         now = datetime.now(tz.utc)

@@ -76,7 +76,7 @@ async def _require_parent(conn, user_id: UUID) -> dict:
 async def _verify_parent_child(conn, parent_id: UUID, child_id: UUID) -> None:
     """Verify parent-child relationship exists."""
     link = await conn.fetchrow(
-        "SELECT id FROM parent_children WHERE parent_id = $1 AND child_id = $2",
+        "SELECT id FROM parent_children WHERE parent_id = $1 AND child_user_id = $2",
         parent_id,
         child_id,
     )
@@ -132,6 +132,7 @@ async def confirm_deletion(
             conn=conn,
             request_id=body.request_id,
             confirmation_token=body.confirmation_token,
+            parent_id=parent["id"],
         )
 
     if result is None:

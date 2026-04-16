@@ -168,7 +168,8 @@ async def validate_session(
     row = await conn.fetchrow(
         "SELECT id, impersonator_user_id, target_user_id, mode "
         "FROM impersonation_sessions "
-        "WHERE id = $1 AND ended_at IS NULL",
+        "WHERE id = $1 AND ended_at IS NULL "
+        "AND started_at > now() - interval '8 hours'",
         session_id,
     )
     return dict(row) if row else None

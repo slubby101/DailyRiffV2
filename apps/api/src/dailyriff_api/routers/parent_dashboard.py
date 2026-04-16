@@ -135,7 +135,8 @@ async def list_children(
                 practice_rows = await conn.fetch(
                     """SELECT DATE(uploaded_at AT TIME ZONE 'UTC') as practice_date
                        FROM recordings WHERE student_id = $1
-                       AND uploaded_at IS NOT NULL AND deleted_at IS NULL""",
+                       AND uploaded_at IS NOT NULL AND deleted_at IS NULL
+                       AND uploaded_at >= now() - interval '1 year'""",
                     cr["child_user_id"],
                 )
                 practice_dates = [r["practice_date"] for r in practice_rows]

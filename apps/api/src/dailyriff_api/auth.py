@@ -196,12 +196,14 @@ async def get_current_user(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Invalid or expired impersonation session",
             )
+        # Use the target user's context, NOT the impersonator's role.
+        # role=None ensures impersonated sessions cannot pass require_superadmin.
         return CurrentUser(
             id=session["target_user_id"],
-            email=None,  # target email not available from session
-            role=role,
+            email=None,
+            role=None,
             impersonation_session_id=session_id,
-            has_totp=has_totp,
+            has_totp=False,
         )
 
     return CurrentUser(

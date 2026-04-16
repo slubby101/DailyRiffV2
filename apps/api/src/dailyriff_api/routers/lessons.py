@@ -281,7 +281,8 @@ async def export_lessons_ics(
             params.append(end)
             idx += 1
 
-        query += " ORDER BY lo.occurrence_date, lo.start_time"
+        query += f" ORDER BY lo.occurrence_date, lo.start_time LIMIT ${idx}"
+        params.append(10000)
 
         rows = await conn.fetch(query, *params)
 

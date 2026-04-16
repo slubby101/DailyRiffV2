@@ -34,10 +34,12 @@ def _jwt_secret() -> str:
 
 
 @pytest.fixture(autouse=True)
-def _ensure_jwt_secret(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Guarantee tests always have a JWT secret available."""
+def _ensure_test_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Guarantee tests always have a JWT secret and ENVIRONMENT set."""
     if not os.environ.get("SUPABASE_JWT_SECRET"):
         monkeypatch.setenv("SUPABASE_JWT_SECRET", DEFAULT_JWT_SECRET)
+    if not os.environ.get("ENVIRONMENT"):
+        monkeypatch.setenv("ENVIRONMENT", "test")
 
 
 @pytest.fixture

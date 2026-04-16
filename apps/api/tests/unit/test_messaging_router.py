@@ -87,9 +87,25 @@ def test_create_conversation(
 ) -> None:
     import dailyriff_api.routers.messaging as msg_mod
 
-    monkeypatch.setattr(
-        msg_mod, "rls_transaction", _make_rls_ctx(fetchrow_result=CONV_ROW)
-    )
+    studio_members = [{"user_id": USER_A_ID}, {"user_id": USER_B_ID}]
+
+    @asynccontextmanager
+    async def _ctx(user_id):
+        conn = AsyncMock()
+        call_count = {"fetch": 0}
+
+        async def _smart_fetch(*args, **kwargs):
+            call_count["fetch"] += 1
+            if call_count["fetch"] == 1:
+                return studio_members
+            return []
+
+        conn.fetch = _smart_fetch
+        conn.fetchrow = AsyncMock(return_value=CONV_ROW)
+        conn.execute = AsyncMock(return_value="INSERT 1")
+        yield conn
+
+    monkeypatch.setattr(msg_mod, "rls_transaction", _ctx)
 
     token = make_test_jwt(user_id=USER_A_ID)
     resp = client.post(

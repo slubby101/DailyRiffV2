@@ -83,9 +83,8 @@ describe("apiFetch", () => {
   });
 
   it("includes auth token from localStorage when present", async () => {
-    // Mock localStorage
     const store: Record<string, string> = {
-      supabase_access_token: "test-jwt-token",
+      "sb-test-auth-token": JSON.stringify({ access_token: "test-jwt-token" }),
     };
     Object.defineProperty(global, "localStorage", {
       value: {
@@ -93,6 +92,8 @@ describe("apiFetch", () => {
         setItem: (key: string, value: string) => { store[key] = value; },
         clear: () => { for (const k in store) delete store[k]; },
         removeItem: (key: string) => { delete store[key]; },
+        key: (i: number) => Object.keys(store)[i] ?? null,
+        get length() { return Object.keys(store).length; },
       },
       writable: true,
       configurable: true,

@@ -104,7 +104,8 @@ def test_current_user_has_studio_id_and_impersonation_session_id(
     assert user.impersonation_session_id == uuid.UUID("00000000-0000-0000-0000-0000000000aa")
 
 
-def test_current_user_new_fields_default_to_none(
+@pytest.mark.asyncio
+async def test_current_user_new_fields_default_to_none(
     make_test_jwt: Callable[..., str],
 ) -> None:
     """CurrentUser studio_id and impersonation_session_id default to None."""
@@ -114,7 +115,7 @@ def test_current_user_new_fields_default_to_none(
     from fastapi.security import HTTPAuthorizationCredentials
 
     creds = HTTPAuthorizationCredentials(scheme="bearer", credentials=token)
-    user = get_current_user(creds)
+    user = await get_current_user(creds)
     assert user.studio_id is None
     assert user.impersonation_session_id is None
 

@@ -17,6 +17,7 @@ from dailyriff_api.auth import (
     get_current_user,
 )
 from dailyriff_api.db import rls_transaction, service_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.recording import (
     PlaybackUrlResponse,
     RecordingCreateRequest,
@@ -59,11 +60,15 @@ def _presign_upload_url(r2_object_key: str) -> str:
 @router.get("", response_model=list[RecordingResponse], responses=PROTECTED_RESPONSES)
 async def list_recordings(
     user: CurrentUser = Depends(get_current_user),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[RecordingResponse]:
+    limit, offset = pagination
     async with rls_transaction(user.id) as conn:
         rows = await conn.fetch(
             f"SELECT {RECORDING_COLUMNS} FROM recordings "
-            f"WHERE deleted_at IS NULL ORDER BY created_at DESC",
+            f"WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            limit,
+            offset,
         )
     return [RecordingResponse(**dict(r)) for r in rows]
 

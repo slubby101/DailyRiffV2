@@ -38,10 +38,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/coppa", tags=["coppa"])
 
 
-def _get_coppa_service() -> CoppaService:
-    return CoppaService()
-
-
 def _get_stripe_webhook_secret() -> str | None:
     return os.environ.get("STRIPE_WEBHOOK_SECRET")
 

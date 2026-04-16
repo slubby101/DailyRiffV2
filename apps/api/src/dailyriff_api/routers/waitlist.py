@@ -28,8 +28,8 @@ from dailyriff_api.auth import (
     require_superadmin,
 )
 from dailyriff_api.db import service_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.waitlist import (
-    WaitlistApproveRequest,
     WaitlistBypassCreateRequest,
     WaitlistEntryResponse,
     WaitlistMessageRequest,
@@ -37,6 +37,7 @@ from dailyriff_api.schemas.waitlist import (
     WaitlistRejectRequest,
     WaitlistStatus,
     WaitlistSubmitRequest,
+    WaitlistSubmitResponse,
 )
 from dailyriff_api.services.captcha import verify_hcaptcha
 
@@ -59,13 +60,13 @@ MESSAGE_COLUMNS = "id, waitlist_entry_id, sender_id, body, created_at"
 
 @public_router.post(
     "/waitlist",
-    response_model=WaitlistEntryResponse,
+    response_model=WaitlistSubmitResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def submit_waitlist(
     body: WaitlistSubmitRequest,
     request: Request,
-) -> WaitlistEntryResponse:
+) -> WaitlistSubmitResponse:
     """Submit a new waitlist entry from the marketing homepage."""
     # Verify hCaptcha (no-op in dev/test)
     if body.captcha_token:
@@ -101,7 +102,10 @@ async def submit_waitlist(
             body.captcha_token,
         )
 
-    return WaitlistEntryResponse(**dict(row))
+    return WaitlistSubmitResponse(**{
+        k: v for k, v in dict(row).items()
+        if k in WaitlistSubmitResponse.model_fields
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -117,18 +121,24 @@ async def submit_waitlist(
 async def list_waitlist(
     user: CurrentUser = Depends(require_superadmin),
     status_filter: Optional[WaitlistStatus] = Query(None, alias="status"),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[WaitlistEntryResponse]:
     """List all waitlist entries, optionally filtered by status."""
+    limit, offset = pagination
     async with service_transaction() as conn:
         if status_filter:
             rows = await conn.fetch(
                 f"SELECT {ENTRY_COLUMNS} FROM waitlist_entries "
-                f"WHERE status = $1 ORDER BY created_at ASC",
+                f"WHERE status = $1 ORDER BY created_at ASC LIMIT $2 OFFSET $3",
                 status_filter,
+                limit,
+                offset,
             )
         else:
             rows = await conn.fetch(
-                f"SELECT {ENTRY_COLUMNS} FROM waitlist_entries ORDER BY created_at ASC",
+                f"SELECT {ENTRY_COLUMNS} FROM waitlist_entries ORDER BY created_at ASC LIMIT $1 OFFSET $2",
+                limit,
+                offset,
             )
     return [WaitlistEntryResponse(**dict(r)) for r in rows]
 

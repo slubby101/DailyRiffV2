@@ -101,42 +101,32 @@ async def redeem_invitation(
     token_hash = _hash_token(token)
     now = datetime.now(tz.utc)
 
-    # Find the invitation by hash
-    row = await conn.fetchrow(
-        f"SELECT {INVITATION_COLUMNS} FROM invitations "
-        f"WHERE token_hash = $1",
-        token_hash,
-    )
-    if row is None:
-        return None
-
-    row_dict = dict(row)
-
-    # Check status
-    if row_dict["status"] != "pending":
-        return None
-
-    # Check expiry
-    if row_dict["expires_at"] < now:
-        # Mark as expired
-        await conn.execute(
-            "UPDATE invitations SET status = 'expired', updated_at = $2 WHERE id = $1",
-            row_dict["id"],
-            now,
-        )
-        return None
-
-    # Redeem
+    # Atomically redeem: WHERE status = 'pending' prevents double-redemption race
     updated = await conn.fetchrow(
         f"UPDATE invitations "
         f"SET status = 'accepted', redeemed_at = $2, redeemed_by = $3, "
         f"    invited_user_id = $3, updated_at = $2 "
-        f"WHERE id = $1 "
+        f"WHERE token_hash = $1 AND status = 'pending' AND expires_at >= $2 "
         f"RETURNING {INVITATION_COLUMNS}",
-        row_dict["id"],
+        token_hash,
         now,
         redeemed_by,
     )
+
+    if updated is None:
+        # Check if expired and mark it
+        expired_row = await conn.fetchrow(
+            f"SELECT id FROM invitations WHERE token_hash = $1 AND status = 'pending' AND expires_at < $2",
+            token_hash,
+            now,
+        )
+        if expired_row:
+            await conn.execute(
+                "UPDATE invitations SET status = 'expired', updated_at = $2 WHERE id = $1",
+                expired_row["id"],
+                now,
+            )
+        return None
 
     if updated is None:
         return None
@@ -160,6 +150,7 @@ async def regenerate_invitation(
     conn: asyncpg.Connection,
     *,
     invitation_id: UUID,
+    studio_id: UUID,
 ) -> tuple[dict, str] | None:
     """Regenerate token for an invitation, invalidating the prior token.
 
@@ -174,12 +165,13 @@ async def regenerate_invitation(
         f"SET token_hash = $2, expires_at = $3, status = 'pending', "
         f"    redeemed_at = NULL, redeemed_by = NULL, invited_user_id = NULL, "
         f"    updated_at = $4 "
-        f"WHERE id = $1 "
+        f"WHERE id = $1 AND studio_id = $5 "
         f"RETURNING {INVITATION_COLUMNS}",
         invitation_id,
         token_hash,
         expires_at,
         now,
+        studio_id,
     )
     if row is None:
         return None
@@ -205,22 +197,28 @@ async def list_studio_invitations(
     *,
     studio_id: UUID,
     status_filter: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
 ) -> list[dict]:
     """List invitations for a studio, optionally filtered by status."""
     if status_filter:
         rows = await conn.fetch(
             f"SELECT {INVITATION_COLUMNS} FROM invitations "
             f"WHERE studio_id = $1 AND status = $2 "
-            f"ORDER BY created_at DESC",
+            f"ORDER BY created_at DESC LIMIT $3 OFFSET $4",
             studio_id,
             status_filter,
+            limit,
+            offset,
         )
     else:
         rows = await conn.fetch(
             f"SELECT {INVITATION_COLUMNS} FROM invitations "
             f"WHERE studio_id = $1 "
-            f"ORDER BY created_at DESC",
+            f"ORDER BY created_at DESC LIMIT $2 OFFSET $3",
             studio_id,
+            limit,
+            offset,
         )
     return [dict(r) for r in rows]
 
@@ -235,8 +233,9 @@ async def create_batch_parent_invitation(
 ) -> tuple[dict, str]:
     """Create a single parent invitation for multiple children.
 
-    The child_names are stored as metadata; actual child records are created
-    on redemption. Returns (row_dict, plaintext_token).
+    NOTE: child_names are accepted but NOT yet persisted (no metadata column).
+    A future migration should add JSONB metadata to invitations.
+    Returns (row_dict, plaintext_token).
     """
     return await create_invitation(
         conn,

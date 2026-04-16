@@ -23,6 +23,7 @@ from dailyriff_api.auth import (
     get_current_user,
 )
 from dailyriff_api.db import service_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.payment import (
     OutstandingBalanceResponse,
     PaymentCreateRequest,
@@ -71,8 +72,10 @@ async def list_payments(
     studio_id: UUID,
     student_user_id: UUID | None = Query(None, description="Filter by student"),
     user: CurrentUser = Depends(get_current_user),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[PaymentResponse]:
     """List payments in a studio. Teacher/owner only."""
+    limit, offset = pagination
     async with service_transaction() as conn:
         await _require_teacher_or_owner(conn, studio_id, user.id)
 
@@ -80,15 +83,19 @@ async def list_payments(
             rows = await conn.fetch(
                 f"SELECT {PAYMENT_COLUMNS} FROM payments "
                 f"WHERE studio_id = $1 AND student_user_id = $2 "
-                f"ORDER BY created_at DESC",
+                f"ORDER BY created_at DESC LIMIT $3 OFFSET $4",
                 studio_id,
                 student_user_id,
+                limit,
+                offset,
             )
         else:
             rows = await conn.fetch(
                 f"SELECT {PAYMENT_COLUMNS} FROM payments "
-                f"WHERE studio_id = $1 ORDER BY created_at DESC",
+                f"WHERE studio_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
                 studio_id,
+                limit,
+                offset,
             )
 
     return [PaymentResponse(**dict(r)) for r in rows]
@@ -120,7 +127,7 @@ async def add_payment(
                 studio_id, student_user_id, amount, currency,
                 payer_user_id, status, method, memo, created_by
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8)
             RETURNING {PAYMENT_COLUMNS}
             """,
             studio_id,
@@ -128,7 +135,6 @@ async def add_payment(
             body.amount,
             body.currency,
             body.payer_user_id,
-            body.status,
             body.method,
             body.memo,
             user.id,
@@ -279,7 +285,7 @@ async def refund_payment(
 
         row = await conn.fetchrow(
             f"UPDATE payments SET status = 'refunded', refunded_at = $3, updated_at = $3 "
-            f"WHERE id = $1 AND studio_id = $2 "
+            f"WHERE id = $1 AND studio_id = $2 AND status = 'paid' "
             f"RETURNING {PAYMENT_COLUMNS}",
             payment_id,
             studio_id,
@@ -287,5 +293,8 @@ async def refund_payment(
         )
 
     if row is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Payment not found or not in 'paid' status",
+        )
     return PaymentResponse(**dict(row))

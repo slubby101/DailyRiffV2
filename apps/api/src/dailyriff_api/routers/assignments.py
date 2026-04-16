@@ -13,6 +13,7 @@ from dailyriff_api.auth import (
     get_current_user,
 )
 from dailyriff_api.db import rls_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.assignment import (
     AcknowledgementResponse,
     AssignmentCreateRequest,
@@ -35,10 +36,14 @@ ACK_COLUMNS = "id, assignment_id, recording_id, status, acknowledged_at, created
 @router.get("", response_model=list[AssignmentResponse], responses=PROTECTED_RESPONSES)
 async def list_assignments(
     user: CurrentUser = Depends(get_current_user),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[AssignmentResponse]:
+    limit, offset = pagination
     async with rls_transaction(user.id) as conn:
         rows = await conn.fetch(
-            f"SELECT {ASSIGNMENT_COLUMNS} FROM assignments ORDER BY created_at DESC",
+            f"SELECT {ASSIGNMENT_COLUMNS} FROM assignments ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            limit,
+            offset,
         )
     return [AssignmentResponse(**dict(r)) for r in rows]
 

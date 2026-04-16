@@ -17,6 +17,7 @@ from dailyriff_api.auth import (
     require_superadmin,
 )
 from dailyriff_api.db import service_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.studio import StudioResponse
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -34,11 +35,15 @@ STUDIO_COLUMNS = (
 )
 async def list_all_studios(
     user: CurrentUser = Depends(require_superadmin),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[StudioResponse]:
     """List all studios across the platform (bypasses RLS)."""
+    limit, offset = pagination
     async with service_transaction() as conn:
         rows = await conn.fetch(
-            f"SELECT {STUDIO_COLUMNS} FROM studios ORDER BY created_at DESC",
+            f"SELECT {STUDIO_COLUMNS} FROM studios ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            limit,
+            offset,
         )
     return [StudioResponse(**dict(r)) for r in rows]
 

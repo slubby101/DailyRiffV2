@@ -12,7 +12,6 @@ Public (requires auth):
 
 from __future__ import annotations
 
-from datetime import datetime, timezone as tz
 from typing import Optional
 from uuid import UUID
 
@@ -20,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from dailyriff_api.auth import CurrentUser, get_current_user
 from dailyriff_api.db import service_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.invitation import (
     InvitationBatchCreateRequest,
     InvitationCreateRequest,
@@ -115,8 +115,10 @@ async def list_invitations(
     studio_id: UUID,
     user: CurrentUser = Depends(get_current_user),
     status_filter: Optional[InvitationStatus] = Query(None, alias="status"),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[InvitationResponse]:
     """List invitations for a studio."""
+    limit, offset = pagination
     async with service_transaction() as conn:
         membership = await conn.fetchrow(
             "SELECT role FROM studio_members WHERE studio_id = $1 AND user_id = $2",
@@ -130,7 +132,8 @@ async def list_invitations(
             )
 
         rows = await list_studio_invitations(
-            conn, studio_id=studio_id, status_filter=status_filter
+            conn, studio_id=studio_id, status_filter=status_filter,
+            limit=limit, offset=offset,
         )
 
     return [_to_response(r) for r in rows]
@@ -218,7 +221,7 @@ async def regenerate_invitation_token(
                 detail="Only studio owners and teachers can regenerate invitations",
             )
 
-        result = await regenerate_invitation(conn, invitation_id=invitation_id)
+        result = await regenerate_invitation(conn, invitation_id=invitation_id, studio_id=studio_id)
         if result is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 

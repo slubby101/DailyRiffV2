@@ -39,6 +39,18 @@ class WaitlistEntryResponse(BaseModel):
     updated_at: datetime
 
 
+class WaitlistSubmitResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    email: str
+    name: str
+    studio_name: str | None
+    status: WaitlistStatus
+    created_at: datetime
+    updated_at: datetime
+
+
 class WaitlistApproveRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -6,17 +6,20 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+PaymentStatus = Literal["pending", "paid", "refunded"]
 
 
 class PaymentCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     student_user_id: UUID
-    amount: Decimal
+    amount: Decimal = Field(gt=0)
     currency: str = "USD"
     payer_user_id: UUID | None = None
-    status: str = "pending"
     method: str | None = None
     memo: str | None = None
 
@@ -24,8 +27,8 @@ class PaymentCreateRequest(BaseModel):
 class PaymentUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    amount: Decimal | None = None
-    status: str | None = None
+    amount: Decimal | None = Field(None, gt=0)
+    status: PaymentStatus | None = None
     method: str | None = None
     memo: str | None = None
 

@@ -109,6 +109,13 @@ def upgrade() -> None:
     op.create_index(
         "coppa_consents_status_idx", "coppa_consents", ["status"]
     )
+    op.create_index(
+        "coppa_consents_stripe_si_idx",
+        "coppa_consents",
+        ["stripe_setup_intent_id"],
+        unique=True,
+        postgresql_where=sa.text("stripe_setup_intent_id IS NOT NULL"),
+    )
 
     # ---- RLS ---------------------------------------------------------------
     op.execute("ALTER TABLE coppa_consents ENABLE ROW LEVEL SECURITY")

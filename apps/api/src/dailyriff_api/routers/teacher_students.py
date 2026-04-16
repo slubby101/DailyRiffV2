@@ -25,6 +25,7 @@ from dailyriff_api.auth import (
     get_current_user,
 )
 from dailyriff_api.db import service_transaction
+from dailyriff_api.pagination import pagination_params
 from dailyriff_api.schemas.teacher_students import (
     LoanCreateRequest,
     LoanResponse,
@@ -77,8 +78,10 @@ async def list_students(
     studio_id: UUID,
     search: str | None = Query(None, description="Search by email"),
     user: CurrentUser = Depends(get_current_user),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[StudentListItem]:
     """List all students in a studio. Teacher/owner only."""
+    limit, offset = pagination
     async with service_transaction() as conn:
         await _require_teacher_or_owner(conn, studio_id, user.id)
 
@@ -92,9 +95,12 @@ async def list_students(
                   AND sm.role = 'student'
                   AND (au.email ILIKE '%' || $2 || '%')
                 ORDER BY sm.joined_at DESC
+                LIMIT $3 OFFSET $4
                 """,
                 studio_id,
                 search,
+                limit,
+                offset,
             )
         else:
             rows = await conn.fetch(
@@ -104,8 +110,11 @@ async def list_students(
                 LEFT JOIN auth.users au ON au.id = sm.user_id
                 WHERE sm.studio_id = $1 AND sm.role = 'student'
                 ORDER BY sm.joined_at DESC
+                LIMIT $2 OFFSET $3
                 """,
                 studio_id,
+                limit,
+                offset,
             )
 
     return [StudentListItem(**dict(r)) for r in rows]
@@ -281,21 +290,27 @@ async def list_loans(
     studio_id: UUID,
     student_user_id: UUID | None = Query(None, description="Filter by student"),
     user: CurrentUser = Depends(get_current_user),
+    pagination: tuple[int, int] = Depends(pagination_params),
 ) -> list[LoanResponse]:
     """List loans in a studio. Teacher/owner only."""
+    limit, offset = pagination
     async with service_transaction() as conn:
         await _require_teacher_or_owner(conn, studio_id, user.id)
 
         if student_user_id:
             rows = await conn.fetch(
-                f"SELECT {LOAN_COLUMNS} FROM loans WHERE studio_id = $1 AND student_user_id = $2 ORDER BY loaned_at DESC",
+                f"SELECT {LOAN_COLUMNS} FROM loans WHERE studio_id = $1 AND student_user_id = $2 ORDER BY loaned_at DESC LIMIT $3 OFFSET $4",
                 studio_id,
                 student_user_id,
+                limit,
+                offset,
             )
         else:
             rows = await conn.fetch(
-                f"SELECT {LOAN_COLUMNS} FROM loans WHERE studio_id = $1 ORDER BY loaned_at DESC",
+                f"SELECT {LOAN_COLUMNS} FROM loans WHERE studio_id = $1 ORDER BY loaned_at DESC LIMIT $2 OFFSET $3",
                 studio_id,
+                limit,
+                offset,
             )
 
     return [LoanResponse(**dict(r)) for r in rows]

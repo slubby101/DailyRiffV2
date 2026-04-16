@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 
 from slowapi import Limiter
@@ -10,8 +9,6 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-
-logger = logging.getLogger(__name__)
 
 DEFAULT_GLOBAL_LIMIT = "100/minute"
 

@@ -325,4 +325,5 @@ class TestConvert:
                 activity_call = call
                 break
         assert activity_call is not None, "Expected activity_logs INSERT"
-        assert activity_call[0][1] == "account_conversion"
+        assert activity_call[0][1] == TEACHER_ID  # user_id
+        assert activity_call[0][2] == "account_conversion"  # action

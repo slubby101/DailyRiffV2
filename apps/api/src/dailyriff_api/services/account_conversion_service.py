@@ -151,22 +151,18 @@ class AccountConversionService:
 
             # Log the conversion to activity_logs
             await conn.execute(
-                """
-                INSERT INTO activity_logs (action, entity_type, entity_id,
-                    performed_by, details, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                """,
+                "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details) "
+                "VALUES ($1, $2, $3, $4, $5)",
+                converted_by,
                 "account_conversion",
                 "studio_member",
-                row["id"],
-                converted_by,
+                str(row["id"]),
                 {
                     "from_age_class": current_age_class,
                     "to_age_class": target_age_class,
                     "child_user_id": str(child_user_id),
                     "studio_id": str(studio_id),
                 },
-                datetime.now(tz.utc),
             )
 
             return {

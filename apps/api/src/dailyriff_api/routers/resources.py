@@ -138,3 +138,5 @@ async def delete_resource(
             "DELETE FROM resources WHERE id = $1",
             resource_id,
         )
+    if result == "DELETE 0":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

@@ -205,6 +205,23 @@ def test_delete_resource(
     assert resp.status_code == 204
 
 
+def test_delete_resource_not_found(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.resources as res_mod
+
+    monkeypatch.setattr(
+        res_mod, "rls_transaction", _make_rls_ctx(execute_result="DELETE 0")
+    )
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.delete(
+        f"/resources/{uuid.uuid4()}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 404
+
+
 def test_unauthenticated_request_rejected(client: TestClient) -> None:
     resp = client.get("/resources")
     assert resp.status_code == 401

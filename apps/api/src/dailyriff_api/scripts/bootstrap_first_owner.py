@@ -32,11 +32,10 @@ def _dsn() -> str:
 async def _run(user_id: UUID, *, dry_run: bool = False) -> None:
     conn = await asyncpg.connect(_dsn())
     try:
-        async with conn.transaction():
-            # Advisory lock prevents concurrent bootstrap runs
-            await conn.execute("SELECT pg_advisory_xact_lock(42)")
-            # Check 1: no employees exist
-            count = await conn.fetchval("SELECT COUNT(*) FROM dailyriff_employees")
+        # Advisory lock prevents concurrent bootstrap runs
+        await conn.execute("SELECT pg_advisory_lock(42)")
+        # Check 1: no employees exist
+        count = await conn.fetchval("SELECT COUNT(*) FROM dailyriff_employees")
         if count > 0:
             print(f"ABORT: {count} employee(s) already exist. This script is one-shot only.")
             sys.exit(1)

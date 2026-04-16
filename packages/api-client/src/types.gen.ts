@@ -39,6 +39,94 @@ export type ActivityLogResponse = {
 };
 
 /**
+ * CategoryPreferenceResponse
+ */
+export type CategoryPreferenceResponse = {
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Channel
+     */
+    channel: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+};
+
+/**
+ * CategoryPreferenceUpsertRequest
+ */
+export type CategoryPreferenceUpsertRequest = {
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Channel
+     */
+    channel: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+};
+
+/**
+ * ConversationCreateRequest
+ */
+export type ConversationCreateRequest = {
+    /**
+     * Participant Ids
+     */
+    participant_ids: Array<string>;
+    /**
+     * Studio Id
+     */
+    studio_id: string;
+};
+
+/**
+ * ConversationResponse
+ */
+export type ConversationResponse = {
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Created By
+     */
+    created_by: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Studio Id
+     */
+    studio_id: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
  * DeviceRegisterRequest
  */
 export type DeviceRegisterRequest = {
@@ -118,6 +206,92 @@ export type HealthResponse = {
      * Version
      */
     version: string;
+};
+
+/**
+ * MessageCreateRequest
+ */
+export type MessageCreateRequest = {
+    /**
+     * Body
+     */
+    body: string;
+};
+
+/**
+ * MessageResponse
+ */
+export type MessageResponse = {
+    /**
+     * Body
+     */
+    body: string;
+    /**
+     * Conversation Id
+     */
+    conversation_id: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Sender Id
+     */
+    sender_id: string;
+};
+
+/**
+ * NotificationTemplateResponse
+ */
+export type NotificationTemplateResponse = {
+    /**
+     * Body Template
+     */
+    body_template: string;
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Channels
+     */
+    channels: Array<string>;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Event Type
+     */
+    event_type: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Persona
+     */
+    persona: string;
+    /**
+     * Title Template
+     */
+    title_template: string;
+    /**
+     * Trigger Source
+     */
+    trigger_source: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
 };
 
 /**
@@ -426,6 +600,252 @@ export type StudioUpdateRequest = {
     timezone?: string | null;
 };
 
+export type ListConversationsConversationsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/conversations';
+};
+
+export type ListConversationsConversationsGetErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type ListConversationsConversationsGetResponses = {
+    /**
+     * Response List Conversations Conversations Get
+     *
+     * Successful Response
+     */
+    200: Array<ConversationResponse>;
+};
+
+export type ListConversationsConversationsGetResponse = ListConversationsConversationsGetResponses[keyof ListConversationsConversationsGetResponses];
+
+export type CreateConversationConversationsPostData = {
+    body: ConversationCreateRequest;
+    path?: never;
+    query?: never;
+    url: '/conversations';
+};
+
+export type CreateConversationConversationsPostErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type CreateConversationConversationsPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: ConversationResponse;
+};
+
+export type CreateConversationConversationsPostResponse = CreateConversationConversationsPostResponses[keyof CreateConversationConversationsPostResponses];
+
+export type GetConversationConversationsConversationIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Conversation Id
+         */
+        conversation_id: string;
+    };
+    query?: never;
+    url: '/conversations/{conversation_id}';
+};
+
+export type GetConversationConversationsConversationIdGetErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Conversation not found
+     */
+    404: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type GetConversationConversationsConversationIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ConversationResponse;
+};
+
+export type GetConversationConversationsConversationIdGetResponse = GetConversationConversationsConversationIdGetResponses[keyof GetConversationConversationsConversationIdGetResponses];
+
+export type ListMessagesConversationsConversationIdMessagesGetData = {
+    body?: never;
+    path: {
+        /**
+         * Conversation Id
+         */
+        conversation_id: string;
+    };
+    query?: never;
+    url: '/conversations/{conversation_id}/messages';
+};
+
+export type ListMessagesConversationsConversationIdMessagesGetErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Conversation not found
+     */
+    404: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type ListMessagesConversationsConversationIdMessagesGetResponses = {
+    /**
+     * Response List Messages Conversations  Conversation Id  Messages Get
+     *
+     * Successful Response
+     */
+    200: Array<MessageResponse>;
+};
+
+export type ListMessagesConversationsConversationIdMessagesGetResponse = ListMessagesConversationsConversationIdMessagesGetResponses[keyof ListMessagesConversationsConversationIdMessagesGetResponses];
+
+export type SendMessageConversationsConversationIdMessagesPostData = {
+    body: MessageCreateRequest;
+    path: {
+        /**
+         * Conversation Id
+         */
+        conversation_id: string;
+    };
+    query?: never;
+    url: '/conversations/{conversation_id}/messages';
+};
+
+export type SendMessageConversationsConversationIdMessagesPostErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Conversation not found
+     */
+    404: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type SendMessageConversationsConversationIdMessagesPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: MessageResponse;
+};
+
+export type SendMessageConversationsConversationIdMessagesPostResponse = SendMessageConversationsConversationIdMessagesPostResponses[keyof SendMessageConversationsConversationIdMessagesPostResponses];
+
+export type MarkConversationReadConversationsConversationIdReadPostData = {
+    body?: never;
+    path: {
+        /**
+         * Conversation Id
+         */
+        conversation_id: string;
+    };
+    query?: never;
+    url: '/conversations/{conversation_id}/read';
+};
+
+export type MarkConversationReadConversationsConversationIdReadPostErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type MarkConversationReadConversationsConversationIdReadPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type MarkConversationReadConversationsConversationIdReadPostResponse = MarkConversationReadConversationsConversationIdReadPostResponses[keyof MarkConversationReadConversationsConversationIdReadPostResponses];
+
 export type ListDevicesDevicesGetData = {
     body?: never;
     path?: never;
@@ -562,6 +982,78 @@ export type HealthHealthGetResponses = {
 
 export type HealthHealthGetResponse = HealthHealthGetResponses[keyof HealthHealthGetResponses];
 
+export type ListCategoryPreferencesNotificationCategoryPreferencesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notification-category-preferences';
+};
+
+export type ListCategoryPreferencesNotificationCategoryPreferencesGetErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type ListCategoryPreferencesNotificationCategoryPreferencesGetResponses = {
+    /**
+     * Response List Category Preferences Notification Category Preferences Get
+     *
+     * Successful Response
+     */
+    200: Array<CategoryPreferenceResponse>;
+};
+
+export type ListCategoryPreferencesNotificationCategoryPreferencesGetResponse = ListCategoryPreferencesNotificationCategoryPreferencesGetResponses[keyof ListCategoryPreferencesNotificationCategoryPreferencesGetResponses];
+
+export type UpsertCategoryPreferenceNotificationCategoryPreferencesPutData = {
+    body: CategoryPreferenceUpsertRequest;
+    path?: never;
+    query?: never;
+    url: '/notification-category-preferences';
+};
+
+export type UpsertCategoryPreferenceNotificationCategoryPreferencesPutErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type UpsertCategoryPreferenceNotificationCategoryPreferencesPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: CategoryPreferenceResponse;
+};
+
+export type UpsertCategoryPreferenceNotificationCategoryPreferencesPutResponse = UpsertCategoryPreferenceNotificationCategoryPreferencesPutResponses[keyof UpsertCategoryPreferenceNotificationCategoryPreferencesPutResponses];
+
 export type GetPreferencesNotificationPreferencesGetData = {
     body?: never;
     path?: never;
@@ -631,6 +1123,43 @@ export type UpdatePreferencesNotificationPreferencesPatchResponses = {
 };
 
 export type UpdatePreferencesNotificationPreferencesPatchResponse = UpdatePreferencesNotificationPreferencesPatchResponses[keyof UpdatePreferencesNotificationPreferencesPatchResponses];
+
+export type ListTemplatesNotificationTemplatesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notification-templates';
+};
+
+export type ListTemplatesNotificationTemplatesGetErrors = {
+    /**
+     * Bad request — invalid input
+     */
+    400: unknown;
+    /**
+     * Not authenticated
+     */
+    401: unknown;
+    /**
+     * Method not allowed
+     */
+    405: unknown;
+    /**
+     * Validation error
+     */
+    422: unknown;
+};
+
+export type ListTemplatesNotificationTemplatesGetResponses = {
+    /**
+     * Response List Templates Notification Templates Get
+     *
+     * Successful Response
+     */
+    200: Array<NotificationTemplateResponse>;
+};
+
+export type ListTemplatesNotificationTemplatesGetResponse = ListTemplatesNotificationTemplatesGetResponses[keyof ListTemplatesNotificationTemplatesGetResponses];
 
 export type ListResourcesResourcesGetData = {
     body?: never;

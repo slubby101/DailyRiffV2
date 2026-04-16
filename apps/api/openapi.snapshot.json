@@ -58,6 +58,72 @@
         "title": "ActivityLogResponse",
         "type": "object"
       },
+      "CategoryPreferenceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "category",
+          "channel",
+          "enabled",
+          "updated_at"
+        ],
+        "title": "CategoryPreferenceResponse",
+        "type": "object"
+      },
+      "CategoryPreferenceUpsertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "category",
+          "channel",
+          "enabled"
+        ],
+        "title": "CategoryPreferenceUpsertRequest",
+        "type": "object"
+      },
       "ConversationCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -317,6 +383,76 @@
           "created_at"
         ],
         "title": "MessageResponse",
+        "type": "object"
+      },
+      "NotificationTemplateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "body_template": {
+            "title": "Body Template",
+            "type": "string"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "persona": {
+            "title": "Persona",
+            "type": "string"
+          },
+          "title_template": {
+            "title": "Title Template",
+            "type": "string"
+          },
+          "trigger_source": {
+            "title": "Trigger Source",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_type",
+          "category",
+          "persona",
+          "title_template",
+          "body_template",
+          "channels",
+          "trigger_source",
+          "enabled",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "NotificationTemplateResponse",
         "type": "object"
       },
       "PreferencesResponse": {
@@ -1386,6 +1522,94 @@
         "summary": "Health"
       }
     },
+    "/notification-category-preferences": {
+      "get": {
+        "operationId": "list_category_preferences_notification_category_preferences_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryPreferenceResponse"
+                  },
+                  "title": "Response List Category Preferences Notification Category Preferences Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Category Preferences",
+        "tags": [
+          "notification-templates"
+        ]
+      },
+      "put": {
+        "operationId": "upsert_category_preference_notification_category_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryPreferenceUpsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryPreferenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upsert Category Preference",
+        "tags": [
+          "notification-templates"
+        ]
+      }
+    },
     "/notification-preferences": {
       "get": {
         "operationId": "get_preferences_notification_preferences_get",
@@ -1467,6 +1691,48 @@
         "summary": "Update Preferences",
         "tags": [
           "preferences"
+        ]
+      }
+    },
+    "/notification-templates": {
+      "get": {
+        "operationId": "list_templates_notification_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationTemplateResponse"
+                  },
+                  "title": "Response List Templates Notification Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Templates",
+        "tags": [
+          "notification-templates"
         ]
       }
     },

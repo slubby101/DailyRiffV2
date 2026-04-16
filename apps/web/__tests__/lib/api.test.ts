@@ -225,6 +225,77 @@ describe("apiFetch", () => {
     );
   });
 
+  it("returns null access_token when parsed object has no access_token via project ref", async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF = "notoken";
+    const store: Record<string, string> = {
+      "sb-notoken-auth-token": JSON.stringify({ refresh_token: "only-refresh" }),
+    };
+    Object.defineProperty(global, "localStorage", {
+      value: {
+        getItem: (key: string) => store[key] ?? null,
+        setItem: (key: string, value: string) => { store[key] = value; },
+        clear: () => { for (const k in store) delete store[k]; },
+        removeItem: (key: string) => { delete store[key]; },
+        key: (i: number) => Object.keys(store)[i] ?? null,
+        get length() { return Object.keys(store).length; },
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({}),
+    });
+
+    await apiFetch("/test");
+    // No Authorization header since access_token is missing
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:8000/test",
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          Authorization: expect.anything(),
+        }),
+      }),
+    );
+    delete process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF;
+  });
+
+  it("returns null access_token when fallback scan finds object without access_token", async () => {
+    const store: Record<string, string> = {
+      "sb-proj-auth-token": JSON.stringify({ refresh_token: "only-refresh" }),
+    };
+    Object.defineProperty(global, "localStorage", {
+      value: {
+        getItem: (key: string) => store[key] ?? null,
+        setItem: (key: string, value: string) => { store[key] = value; },
+        clear: () => { for (const k in store) delete store[k]; },
+        removeItem: (key: string) => { delete store[key]; },
+        key: (i: number) => Object.keys(store)[i] ?? null,
+        get length() { return Object.keys(store).length; },
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({}),
+    });
+
+    await apiFetch("/test");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:8000/test",
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          Authorization: expect.anything(),
+        }),
+      }),
+    );
+  });
+
   it("reads token by project ref when NEXT_PUBLIC_SUPABASE_PROJECT_REF is set", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF = "myproj";
     const store: Record<string, string> = {
@@ -260,6 +331,30 @@ describe("apiFetch", () => {
       }),
     );
     delete process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF;
+  });
+
+  it("handles null getItem in fallback scan gracefully", async () => {
+    Object.defineProperty(global, "localStorage", {
+      value: {
+        getItem: () => null,
+        setItem: () => {},
+        clear: () => {},
+        removeItem: () => {},
+        key: (i: number) => (i === 0 ? "sb-ghost-auth-token" : null),
+        get length() { return 1; },
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({}),
+    });
+
+    await apiFetch("/test");
+    expect(global.fetch).toHaveBeenCalled();
   });
 
   it("handles malformed JSON in localStorage gracefully", async () => {

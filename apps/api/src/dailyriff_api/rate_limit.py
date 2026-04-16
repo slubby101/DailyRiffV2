@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -23,11 +25,20 @@ ROUTE_DEFAULTS: dict[str, str] = {
 
 _rate_config: dict[str, str] = {}
 
-limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
+
+def _resolve_storage_uri() -> str:
+    """Return Redis URI if REDIS_URL is set and non-empty, else memory://."""
+    redis_url = os.environ.get("REDIS_URL", "").strip()
+    if redis_url:
+        return redis_url
+    return "memory://"
+
+
+limiter = Limiter(key_func=get_remote_address, storage_uri=_resolve_storage_uri())
 
 
 def create_limiter() -> Limiter:
-    return Limiter(key_func=get_remote_address, storage_uri="memory://")
+    return Limiter(key_func=get_remote_address, storage_uri=_resolve_storage_uri())
 
 
 def rate_limit_exceeded_handler(

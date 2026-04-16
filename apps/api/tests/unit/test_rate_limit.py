@@ -79,6 +79,33 @@ class TestDynamicRateConfig:
         assert get_route_limit("device_register") == ROUTE_DEFAULTS["device_register"]
 
 
+class TestStorageBackendSelection:
+    def test_uses_redis_when_redis_url_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("REDIS_URL", "redis://localhost:6379")
+        from dailyriff_api.rate_limit import _resolve_storage_uri
+
+        assert _resolve_storage_uri() == "redis://localhost:6379"
+
+    def test_falls_back_to_memory_when_redis_url_not_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("REDIS_URL", raising=False)
+        from dailyriff_api.rate_limit import _resolve_storage_uri
+
+        assert _resolve_storage_uri() == "memory://"
+
+    def test_falls_back_to_memory_when_redis_url_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("REDIS_URL", "")
+        from dailyriff_api.rate_limit import _resolve_storage_uri
+
+        assert _resolve_storage_uri() == "memory://"
+
+    def test_create_limiter_uses_resolved_storage(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("REDIS_URL", "redis://myredis:6379/0")
+        from dailyriff_api.rate_limit import create_limiter
+
+        lim = create_limiter()
+        assert lim._storage_uri == "redis://myredis:6379/0"
+
+
 class TestRefreshFromSettings:
     @pytest.mark.asyncio
     async def test_refresh_loads_overrides_from_settings_service(self) -> None:

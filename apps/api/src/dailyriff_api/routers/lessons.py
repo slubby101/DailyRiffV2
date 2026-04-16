@@ -264,11 +264,10 @@ async def export_lessons_ics(
         studio_tz = studio["timezone"]
 
         query = (
-            f"SELECT lo.{OCCURRENCE_COLUMNS.replace('id,', 'lo.id,')}, "
-            f"l.title AS lesson_title "
-            f"FROM lesson_occurrences lo "
-            f"JOIN lessons l ON l.id = lo.lesson_id "
-            f"WHERE lo.studio_id = $1"
+            "SELECT lo.*, l.title AS lesson_title "
+            "FROM lesson_occurrences lo "
+            "JOIN lessons l ON l.id = lo.lesson_id "
+            "WHERE lo.studio_id = $1"
         )
         params: list = [studio_id]
         idx = 2
@@ -294,7 +293,7 @@ async def export_lessons_ics(
             start_time=r["start_time"],
             duration_minutes=r["duration_minutes"],
             studio_timezone=studio_tz,
-            uid=f"{r['lo.id'] if 'lo.id' in r else r['id']}@dailyriff.com",
+            uid=f"{r['id']}@dailyriff.com",
         )
         events.append(event)
 

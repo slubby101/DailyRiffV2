@@ -206,3 +206,133 @@ def test_create_recording_rejects_duration_over_3600(
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 422
+
+
+# ---- Playback URL endpoint tests ----
+
+
+def _make_service_ctx(*, fetchrow_result=None, execute_result="INSERT 1"):
+    @asynccontextmanager
+    async def _fake():
+        conn = AsyncMock()
+        conn.fetchrow = AsyncMock(return_value=fetchrow_result)
+        conn.execute = AsyncMock(return_value=execute_result)
+        yield conn
+    return _fake
+
+
+def test_playback_url_returns_presigned_url_for_authorized_user(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+
+    uploaded_row = {**RECORDING_ROW, "uploaded_at": NOW, "file_size_bytes": 1024}
+    monkeypatch.setattr(
+        rec_mod, "service_transaction", _make_service_ctx(fetchrow_result=uploaded_row)
+    )
+
+    async def _allow(conn, user, rec):
+        return True
+
+    monkeypatch.setattr(rec_mod, "can_play_recording", _allow)
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.get(
+        f"/recordings/{RECORDING_ID}/playback-url",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["recording_id"] == str(RECORDING_ID)
+    assert "playback_url" in data
+    assert data["expires_in_seconds"] == 300
+
+
+def test_playback_url_returns_403_for_unauthorized_user(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+
+    uploaded_row = {**RECORDING_ROW, "uploaded_at": NOW, "file_size_bytes": 1024}
+    monkeypatch.setattr(
+        rec_mod, "service_transaction", _make_service_ctx(fetchrow_result=uploaded_row)
+    )
+
+    async def _deny(conn, user, rec):
+        return False
+
+    monkeypatch.setattr(rec_mod, "can_play_recording", _deny)
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.get(
+        f"/recordings/{RECORDING_ID}/playback-url",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 403
+
+
+def test_playback_url_logs_impersonation_access(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+    from dailyriff_api.auth import CurrentUser, get_current_user
+
+    uploaded_row = {**RECORDING_ROW, "uploaded_at": NOW, "file_size_bytes": 1024}
+
+    execute_mock = AsyncMock()
+
+    @asynccontextmanager
+    async def _fake_svc():
+        conn = AsyncMock()
+        conn.fetchrow = AsyncMock(return_value=uploaded_row)
+        conn.execute = execute_mock
+        yield conn
+
+    monkeypatch.setattr(rec_mod, "service_transaction", _fake_svc)
+
+    async def _allow(conn, user, rec):
+        return True
+
+    monkeypatch.setattr(rec_mod, "can_play_recording", _allow)
+
+    imp_session_id = uuid.UUID("22222222-0000-0000-0000-000000000001")
+
+    async def _impersonating_user():
+        return CurrentUser(
+            id=USER_A_ID,
+            email="admin@dailyriff.com",
+            role="superadmin",
+            impersonation_session_id=imp_session_id,
+        )
+
+    app.dependency_overrides[get_current_user] = _impersonating_user
+    try:
+        resp = client.get(
+            f"/recordings/{RECORDING_ID}/playback-url",
+        )
+        assert resp.status_code == 200
+        # Verify the impersonation playback log INSERT was called
+        execute_mock.assert_called_once()
+        call_args = execute_mock.call_args
+        assert "impersonation_playback_log" in call_args[0][0]
+        assert call_args[0][1] == imp_session_id
+        assert call_args[0][2] == RECORDING_ID
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+def test_playback_url_returns_404_for_missing_recording(
+    client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
+) -> None:
+    import dailyriff_api.routers.recordings as rec_mod
+
+    monkeypatch.setattr(
+        rec_mod, "service_transaction", _make_service_ctx(fetchrow_result=None)
+    )
+
+    token = make_test_jwt(user_id=USER_A_ID)
+    resp = client.get(
+        f"/recordings/{uuid.uuid4()}/playback-url",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 404

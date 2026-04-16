@@ -1437,6 +1437,31 @@
         "title": "ParentInfo",
         "type": "object"
       },
+      "PlaybackUrlResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_in_seconds": {
+            "default": 300,
+            "title": "Expires In Seconds",
+            "type": "integer"
+          },
+          "playback_url": {
+            "title": "Playback Url",
+            "type": "string"
+          },
+          "recording_id": {
+            "format": "uuid",
+            "title": "Recording Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recording_id",
+          "playback_url"
+        ],
+        "title": "PlaybackUrlResponse",
+        "type": "object"
+      },
       "PreferencesResponse": {
         "additionalProperties": false,
         "properties": {
@@ -4779,6 +4804,63 @@
           }
         ],
         "summary": "Confirm Upload",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/recordings/{recording_id}/playback-url": {
+      "get": {
+        "description": "Policy check \u2192 mint 5-min presigned R2 URL. FastAPI never proxies bytes.",
+        "operationId": "get_playback_url_recordings__recording_id__playback_url_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recording_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recording Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybackUrlResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Not authorized to play this recording"
+          },
+          "404": {
+            "description": "Recording not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Playback Url",
         "tags": [
           "recordings"
         ]

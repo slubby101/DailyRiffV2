@@ -16,13 +16,15 @@ from dailyriff_api.auth import (
     CurrentUser,
     get_current_user,
 )
-from dailyriff_api.db import rls_transaction
+from dailyriff_api.db import rls_transaction, service_transaction
 from dailyriff_api.schemas.recording import (
+    PlaybackUrlResponse,
     RecordingCreateRequest,
     RecordingResponse,
     UploadConfirmRequest,
     UploadUrlResponse,
 )
+from dailyriff_api.services.playback_authorization import can_play_recording
 from dailyriff_api.services.recording_service import RecordingService
 
 router = APIRouter(prefix="/recordings", tags=["recordings"])
@@ -31,6 +33,16 @@ RECORDING_COLUMNS = (
     "id, studio_id, student_id, assignment_id, r2_object_key, mime_type, "
     "duration_seconds, file_size_bytes, uploaded_at, deleted_at, created_at, updated_at"
 )
+
+
+_PLAYBACK_URL_TTL_SECONDS = 300
+
+
+def _presign_playback_url(r2_object_key: str) -> str:
+    """Generate a 5-minute presigned download URL for R2."""
+    r2_endpoint = os.environ.get("R2_ENDPOINT", "https://r2.dailyriff.com")
+    r2_bucket = os.environ.get("R2_RECORDINGS_BUCKET", "dailyriff-recordings")
+    return f"{r2_endpoint}/{r2_bucket}/{r2_object_key}?X-Amz-Expires={_PLAYBACK_URL_TTL_SECONDS}"
 
 
 def _presign_upload_url(r2_object_key: str) -> str:
@@ -163,3 +175,49 @@ async def confirm_upload(
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return RecordingResponse(**dict(row))
+
+
+@router.get(
+    "/{recording_id}/playback-url",
+    response_model=PlaybackUrlResponse,
+    responses={
+        **PROTECTED_RESPONSES,
+        403: {"description": "Not authorized to play this recording"},
+        404: {"description": "Recording not found"},
+    },
+)
+async def get_playback_url(
+    recording_id: UUID,
+    user: CurrentUser = Depends(get_current_user),
+) -> PlaybackUrlResponse:
+    """Policy check → mint 5-min presigned R2 URL. FastAPI never proxies bytes."""
+    async with service_transaction() as conn:
+        row = await conn.fetchrow(
+            f"SELECT {RECORDING_COLUMNS} FROM recordings WHERE id = $1",
+            recording_id,
+        )
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        recording = dict(row)
+        if not await can_play_recording(conn, user, recording):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to play this recording",
+            )
+
+        # Audit impersonation playback
+        if user.impersonation_session_id is not None:
+            await conn.execute(
+                "INSERT INTO impersonation_playback_log (session_id, recording_id) "
+                "VALUES ($1, $2)",
+                user.impersonation_session_id,
+                recording_id,
+            )
+
+    playback_url = _presign_playback_url(recording["r2_object_key"])
+    return PlaybackUrlResponse(
+        recording_id=recording_id,
+        playback_url=playback_url,
+        expires_in_seconds=_PLAYBACK_URL_TTL_SECONDS,
+    )

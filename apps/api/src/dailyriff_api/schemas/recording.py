@@ -47,3 +47,11 @@ class UploadConfirmRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     file_size_bytes: int | None = None
+
+
+class PlaybackUrlResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    recording_id: UUID
+    playback_url: str
+    expires_in_seconds: int = 300

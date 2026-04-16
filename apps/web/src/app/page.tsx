@@ -1,13 +1,13 @@
-import type { HealthResponse } from "@dailyriff/api-client";
-
-const _typeCheck: HealthResponse | undefined = undefined;
-void _typeCheck;
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   return (
-    <main>
-      <h1>DailyRiff</h1>
-      <p>Your daily music companion</p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+      <h1 className="font-display text-4xl font-bold tracking-tight">
+        DailyRiff
+      </h1>
+      <p className="text-muted-foreground">Your daily music companion</p>
+      <ThemeToggle />
     </main>
   );
 }

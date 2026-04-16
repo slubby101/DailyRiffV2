@@ -100,6 +100,7 @@ async def test_confirm_deletion_with_valid_token_schedules():
         conn=conn,
         request_id=request_id,
         confirmation_token=token,
+        parent_id=PARENT_ID,
         grace_days=15,
     )
 
@@ -138,6 +139,7 @@ async def test_confirm_deletion_with_wrong_token_returns_none():
         conn=conn,
         request_id=request_id,
         confirmation_token="wrong-token",
+        parent_id=PARENT_ID,
     )
 
     assert result is None
@@ -352,6 +354,7 @@ async def test_confirm_on_already_scheduled_returns_none():
         conn=conn,
         request_id=request_id,
         confirmation_token="any",
+        parent_id=PARENT_ID,
     )
 
     assert result is None

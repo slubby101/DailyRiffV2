@@ -643,7 +643,7 @@ async def test_auth_returns_target_user_on_valid_impersonation(
     user = await get_current_user(creds, request=request)
     assert user.id == USER_B_ID
     assert user.impersonation_session_id == SESSION_ID
-    assert user.role == "superadmin"
+    assert user.role is None  # impersonated sessions get role=None (not superadmin)
 
 
 @pytest.mark.asyncio

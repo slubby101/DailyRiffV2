@@ -139,7 +139,7 @@ export default function StudentDashboardPage() {
         {data.upcoming_assignments.length === 0 ? (
           <p className="text-muted-foreground">No upcoming assignments.</p>
         ) : (
-          <ul className="space-y-3" role="list">
+          <ul className="space-y-3">
             {data.upcoming_assignments.map((a) => (
               <li key={a.id}>
                 <Card>
@@ -183,7 +183,7 @@ export default function StudentDashboardPage() {
         {data.recent_recordings.length === 0 ? (
           <p className="text-muted-foreground">No recordings yet.</p>
         ) : (
-          <ul className="space-y-3" role="list">
+          <ul className="space-y-3">
             {data.recent_recordings.map((r) => (
               <li key={r.id}>
                 <Card>

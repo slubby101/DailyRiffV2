@@ -74,7 +74,7 @@ export default function ParentSchedulePage() {
       {data.length === 0 ? (
         <p className="text-muted-foreground">No upcoming lessons scheduled.</p>
       ) : (
-        <ul className="space-y-3" role="list">
+        <ul className="space-y-3">
           {data.map((item) => (
             <li key={item.occurrence_id ?? item.lesson_id}>
               <Card>

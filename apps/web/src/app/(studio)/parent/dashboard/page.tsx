@@ -74,7 +74,7 @@ export default function ParentDashboardPage() {
           No children linked to your account yet.
         </p>
       ) : (
-        <ul className="space-y-4" role="list">
+        <ul className="space-y-4">
           {data.children.map((child) => (
             <li key={child.parent_child_id}>
               <Card>

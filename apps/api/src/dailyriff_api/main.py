@@ -7,8 +7,11 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+import os
+
 import asyncpg
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
@@ -25,6 +28,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="DailyRiff API", version="0.0.0", lifespan=lifespan)
+
+_CORS_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*", "X-Impersonation-Session"],
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)

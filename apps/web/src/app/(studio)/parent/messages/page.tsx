@@ -108,7 +108,7 @@ export default function ParentMessagesPage() {
           {convos.length === 0 ? (
             <p className="text-muted-foreground">No conversations yet.</p>
           ) : (
-            <ul className="space-y-2" role="list">
+            <ul className="space-y-2">
               {convos.map((c) => (
                 <li key={c.id}>
                   <button

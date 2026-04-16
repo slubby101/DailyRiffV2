@@ -1,9 +1,3 @@
-Using CPython 3.14.4 interpreter at: C:\Users\rollin\AppData\Local\Python\pythoncore-3.14-64\python.exe
-Removed virtual environment at: .venv
-Creating virtual environment at: .venv
-   Building dailyriff-api @ file:///C:/Users/rollin/LocalDev/DailyRiffV2/apps/api
-      Built dailyriff-api @ file:///C:/Users/rollin/LocalDev/DailyRiffV2/apps/api
-Installed 84 packages in 576ms
 {
   "components": {
     "schemas": {

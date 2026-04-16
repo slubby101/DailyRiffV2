@@ -53,7 +53,7 @@ export default function ParentNotificationsPage() {
     );
   }
 
-  const data = prefs.data!;
+  const data = prefs.data ?? [];
 
   // Group by category
   const grouped = data.reduce<Record<string, NotificationPref[]>>((acc, p) => {

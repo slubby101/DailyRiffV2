@@ -56,7 +56,7 @@ export default function StudentRecordingHistoryPage() {
       )}
 
       {recordings.data && recordings.data.length > 0 && (
-        <ul className="space-y-3" role="list">
+        <ul className="space-y-3">
           {recordings.data.map((r) => (
             <li key={r.id}>
               <Card>

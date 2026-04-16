@@ -50,7 +50,7 @@ export default function StudentAssignmentsPage() {
       )}
 
       {assignments.data && assignments.data.length > 0 && (
-        <ul className="space-y-3" role="list">
+        <ul className="space-y-3">
           {assignments.data.map((a) => (
             <li key={a.id}>
               <Card>

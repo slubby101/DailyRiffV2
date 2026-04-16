@@ -153,7 +153,7 @@ export default function ParentProgressPage() {
         {data.recent_recordings.length === 0 ? (
           <p className="text-muted-foreground">No recordings yet.</p>
         ) : (
-          <ul className="space-y-3" role="list">
+          <ul className="space-y-3">
             {data.recent_recordings.map((r) => (
               <li key={r.id}>
                 <Card>

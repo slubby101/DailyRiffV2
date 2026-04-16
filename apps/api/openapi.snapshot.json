@@ -463,6 +463,246 @@
         "title": "ConversationResponse",
         "type": "object"
       },
+      "CoppaConfirmRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "consent_id": {
+            "format": "uuid",
+            "title": "Consent Id",
+            "type": "string"
+          },
+          "setup_intent_id": {
+            "title": "Setup Intent Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent_id",
+          "setup_intent_id"
+        ],
+        "title": "CoppaConfirmRequest",
+        "type": "object"
+      },
+      "CoppaConsentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "child_id": {
+            "format": "uuid",
+            "title": "Child Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "form_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Form Url"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "parent_id": {
+            "format": "uuid",
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "revocation_auto_delete_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revocation Auto Delete At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "verified",
+              "revoked",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "stripe_setup_intent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stripe Setup Intent Id"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "child_id",
+          "studio_id",
+          "stripe_setup_intent_id",
+          "form_url",
+          "status",
+          "verified_at",
+          "revoked_at",
+          "revocation_auto_delete_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CoppaConsentResponse",
+        "type": "object"
+      },
+      "CoppaInitiateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "child_id": {
+            "format": "uuid",
+            "title": "Child Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "child_id",
+          "studio_id"
+        ],
+        "title": "CoppaInitiateRequest",
+        "type": "object"
+      },
+      "CoppaInitiateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "consent_id": {
+            "format": "uuid",
+            "title": "Consent Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "verified",
+              "revoked",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent_id",
+          "client_secret",
+          "status"
+        ],
+        "title": "CoppaInitiateResponse",
+        "type": "object"
+      },
+      "CoppaRevokeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "consent_id": {
+            "format": "uuid",
+            "title": "Consent Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent_id"
+        ],
+        "title": "CoppaRevokeRequest",
+        "type": "object"
+      },
+      "CoppaSignedFormRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "consent_id": {
+            "format": "uuid",
+            "title": "Consent Id",
+            "type": "string"
+          },
+          "form_url": {
+            "title": "Form Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "consent_id",
+          "form_url"
+        ],
+        "title": "CoppaSignedFormRequest",
+        "type": "object"
+      },
+      "CoppaWebhookResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "received": {
+            "title": "Received",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "received"
+        ],
+        "title": "CoppaWebhookResponse",
+        "type": "object"
+      },
       "DeviceRegisterRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3922,6 +4162,291 @@
         "summary": "Mark Conversation Read",
         "tags": [
           "messaging"
+        ]
+      }
+    },
+    "/coppa/confirm": {
+      "post": {
+        "description": "Confirm a pending COPPA consent after Stripe Setup Intent succeeds.",
+        "operationId": "confirm_coppa_consent_coppa_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoppaConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoppaConsentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Confirm Coppa Consent",
+        "tags": [
+          "coppa"
+        ]
+      }
+    },
+    "/coppa/consent": {
+      "get": {
+        "description": "Get the current COPPA consent status for a child in a studio.",
+        "operationId": "get_coppa_consent_coppa_consent_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "child_id",
+            "required": true,
+            "schema": {
+              "title": "Child Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CoppaConsentResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Coppa Consent Coppa Consent Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Coppa Consent",
+        "tags": [
+          "coppa"
+        ]
+      }
+    },
+    "/coppa/initiate": {
+      "post": {
+        "description": "Initiate COPPA VPC: create a Stripe Setup Intent and a pending consent record.",
+        "operationId": "initiate_coppa_consent_coppa_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoppaInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoppaInitiateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Initiate Coppa Consent",
+        "tags": [
+          "coppa"
+        ]
+      }
+    },
+    "/coppa/revoke": {
+      "post": {
+        "description": "Revoke a verified COPPA consent. Pauses data collection, schedules 30-day auto-delete.",
+        "operationId": "revoke_coppa_consent_coppa_revoke_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoppaRevokeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoppaConsentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revoke Coppa Consent",
+        "tags": [
+          "coppa"
+        ]
+      }
+    },
+    "/coppa/signed-form": {
+      "post": {
+        "description": "Submit a signed consent form (escape hatch for parents without cards).",
+        "operationId": "submit_signed_form_coppa_signed_form_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoppaSignedFormRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoppaConsentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit Signed Form",
+        "tags": [
+          "coppa"
+        ]
+      }
+    },
+    "/coppa/webhook/stripe": {
+      "post": {
+        "description": "Handle Stripe setup_intent.succeeded webhook for COPPA VPC.\n\nVerifies signature, checks idempotency, then confirms the consent.",
+        "operationId": "stripe_webhook_coppa_webhook_stripe_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoppaWebhookResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stripe Webhook",
+        "tags": [
+          "coppa"
         ]
       }
     },

@@ -316,10 +316,10 @@ def test_user_can_redeem_valid_invitation(
     client: TestClient, make_test_jwt: Callable[..., str], monkeypatch
 ) -> None:
     import dailyriff_api.routers.invitations as mod
-    # redeem_invitation returns the updated row after hash lookup + update + studio_members insert
+    # redeem_invitation: atomic UPDATE returns the redeemed row directly
     monkeypatch.setattr(
         mod, "service_transaction",
-        _make_svc_ctx(fetchrow_results=[INVITATION_ROW, REDEEMED_ROW]),
+        _make_svc_ctx(fetchrow_results=[REDEEMED_ROW]),
     )
 
     token = make_test_jwt(user_id=USER_B_ID)

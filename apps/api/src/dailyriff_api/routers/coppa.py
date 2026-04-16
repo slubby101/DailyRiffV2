@@ -311,24 +311,27 @@ async def stripe_webhook(request: Request) -> CoppaWebhookResponse:
             detail="Missing event ID",
         )
 
-    # Idempotency check
-    idempotency_svc = IdempotencyService()
-    claimed = await idempotency_svc.claim_event("stripe_coppa", event_id)
-    if not claimed:
-        return CoppaWebhookResponse(received=True)
+    # Idempotency: claim + process in one transaction so failed processing releases the claim
+    async with service_transaction() as conn:
+        row = await conn.fetchrow(
+            "INSERT INTO idempotency_log (provider, event_id) "
+            "VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING event_id",
+            "stripe_coppa",
+            event_id,
+        )
+        if row is None:
+            return CoppaWebhookResponse(received=True)
 
-    if event_type == "setup_intent.succeeded":
-        setup_intent = event.get("data", {}).get("object", {})
-        setup_intent_id = setup_intent.get("id")
+        if event_type == "setup_intent.succeeded":
+            setup_intent = event.get("data", {}).get("object", {})
+            setup_intent_id = setup_intent.get("id")
 
-        if setup_intent_id:
-            metadata = setup_intent.get("metadata", {})
-            if metadata.get("purpose") == "coppa_vpc":
-                svc = CoppaService()
-                await svc.confirm_via_webhook(setup_intent_id=setup_intent_id)
+            if setup_intent_id:
+                metadata = setup_intent.get("metadata", {})
+                if metadata.get("purpose") == "coppa_vpc":
+                    svc = CoppaService()
+                    await svc.confirm_via_webhook(setup_intent_id=setup_intent_id, conn=conn)
 
-                # Log to activity_logs
-                async with service_transaction() as conn:
                     await conn.execute(
                         "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, details) "
                         "VALUES ($1, $2, $3, $4, $5)",

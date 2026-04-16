@@ -87,7 +87,7 @@ class TestConfirmConsent:
             "child_id": CHILD_ID,
             "studio_id": STUDIO_ID,
             "status": "pending",
-            "stripe_setup_intent_id": None,
+            "stripe_setup_intent_id": "seti_test_123",
             "form_url": None,
             "verified_at": None,
             "revoked_at": None,
@@ -95,7 +95,7 @@ class TestConfirmConsent:
             "created_at": now,
             "updated_at": now,
         }
-        verified_row = {**pending_row, "status": "verified", "verified_at": now, "stripe_setup_intent_id": "seti_test_123"}
+        verified_row = {**pending_row, "status": "verified", "verified_at": now}
 
         svc = CoppaService(stripe_client=MagicMock())
 

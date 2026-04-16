@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Contact | DailyRiff",
@@ -52,12 +53,12 @@ export default function ContactPage() {
         <p>
           Interested in bringing DailyRiff to your studio? We&apos;re currently
           accepting applications for our controlled beta.{" "}
-          <a
+          <Link
             href="/#waitlist"
             className="text-primary underline underline-offset-2 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             Join the waitlist
-          </a>{" "}
+          </Link>{" "}
           and we&apos;ll be in touch.
         </p>
 

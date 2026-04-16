@@ -316,7 +316,6 @@ export type PaymentCreateRequest = {
     memo?: (string | null);
     method?: (string | null);
     payer_user_id?: (string | null);
-    status?: string;
     student_user_id: string;
 };
 
@@ -340,7 +339,7 @@ export type PaymentUpdateRequest = {
     amount?: (number | string | null);
     memo?: (string | null);
     method?: (string | null);
-    status?: (string | null);
+    status?: ('pending' | 'paid' | 'refunded' | null);
 };
 
 export type PlaybackUrlResponse = {
@@ -548,4 +547,14 @@ export type WaitlistSubmitRequest = {
     email: string;
     name: string;
     studio_name?: (string | null);
+};
+
+export type WaitlistSubmitResponse = {
+    created_at: string;
+    email: string;
+    id: string;
+    name: string;
+    status: 'pending' | 'approved' | 'rejected' | 'invited';
+    studio_name: (string | null);
+    updated_at: string;
 };

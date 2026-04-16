@@ -76,6 +76,14 @@ def upgrade() -> None:
         )
     """)
 
+    # ---- Expand category check to include 'retention' ----------------------------
+    op.execute("ALTER TABLE platform_settings DROP CONSTRAINT platform_settings_category_check")
+    op.execute(
+        "ALTER TABLE platform_settings ADD CONSTRAINT platform_settings_category_check "
+        "CHECK (category IN ('rate_limits', 'business_rule_caps', "
+        "'notification_delays', 'coppa_grace_windows', 'retention'))"
+    )
+
     # ---- Seed retention platform_settings for visibility -------------------------
     op.execute(
         "INSERT INTO platform_settings (key, value_json, description, category) VALUES "
@@ -92,6 +100,16 @@ def downgrade() -> None:
     op.execute("SELECT cron.unschedule('cleanup-idempotency-log')")
     op.execute("DROP FUNCTION IF EXISTS public.cleanup_mfa_failure_log()")
     op.execute("DROP FUNCTION IF EXISTS public.cleanup_idempotency_log()")
+    op.execute(
+        "DELETE FROM platform_settings WHERE key IN ("
+        "'retention_mfa_failure_log_days', 'retention_idempotency_log_days')"
+    )
+    op.execute("ALTER TABLE platform_settings DROP CONSTRAINT platform_settings_category_check")
+    op.execute(
+        "ALTER TABLE platform_settings ADD CONSTRAINT platform_settings_category_check "
+        "CHECK (category IN ('rate_limits', 'business_rule_caps', "
+        "'notification_delays', 'coppa_grace_windows'))"
+    )
     op.execute(
         "DELETE FROM platform_settings WHERE key IN ("
         "'retention_mfa_failure_log_days', "

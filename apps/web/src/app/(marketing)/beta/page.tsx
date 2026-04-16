@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 
 export default function BetaLandingPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-2xl px-4 py-16 text-center text-muted-foreground">Loading...</div>}>
+      <BetaLandingContent />
+    </Suspense>
+  );
+}
+
+function BetaLandingContent() {
   const searchParams = useSearchParams();
   const tokenParam = searchParams.get("token");
 

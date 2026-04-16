@@ -213,9 +213,9 @@ def test_filter_channels_respects_partial_prefs() -> None:
     assert result == ["realtime", "web_push"]
 
 
-def test_event_type_enum_has_18_members() -> None:
-    """The EventType enum has exactly 18 event types (15 from PRD + 3 cross-persona variants)."""
-    assert len(EventType) == 18
+def test_event_type_enum_has_21_members() -> None:
+    """The EventType enum has exactly 21 event types (15 from PRD + 3 cross-persona + 3 beta onboarding)."""
+    assert len(EventType) == 21
 
 
 @pytest.mark.asyncio

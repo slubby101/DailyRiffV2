@@ -58,8 +58,9 @@ class TestBootstrapFirstOwner:
             mock_pg.connect = AsyncMock(return_value=mock_conn)
             await _run(USER_A_ID, dry_run=True)
 
-        # execute should NOT have been called (dry run)
-        mock_conn.execute.assert_not_called()
+        # Only the advisory lock call, no INSERT
+        assert mock_conn.execute.call_count == 1
+        assert "pg_advisory_lock" in mock_conn.execute.call_args_list[0][0][0]
 
     @pytest.mark.asyncio
     async def test_inserts_owner_when_checks_pass(self, monkeypatch) -> None:
@@ -79,10 +80,11 @@ class TestBootstrapFirstOwner:
             mock_pg.connect = AsyncMock(return_value=mock_conn)
             await _run(USER_A_ID, dry_run=False)
 
-        mock_conn.execute.assert_called_once()
-        call_args = mock_conn.execute.call_args
-        assert "INSERT INTO dailyriff_employees" in call_args[0][0]
-        assert call_args[0][1] == USER_A_ID
+        assert mock_conn.execute.call_count == 2
+        assert "pg_advisory_lock" in mock_conn.execute.call_args_list[0][0][0]
+        insert_call = mock_conn.execute.call_args_list[1]
+        assert "INSERT INTO dailyriff_employees" in insert_call[0][0]
+        assert insert_call[0][1] == USER_A_ID
 
     @pytest.mark.asyncio
     async def test_production_aborts_without_totp(self, monkeypatch) -> None:

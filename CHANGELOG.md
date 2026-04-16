@@ -2,6 +2,30 @@
 
 All notable changes to DailyRiff will be documented in this file.
 
+## [0.3.0.0] - 2026-04-16
+
+### Added
+- **Impersonation sessions:** superadmin can impersonate any user with mandatory reason, scope restrictions, Account Access Log, 8-hour auto-expiry
+- **Account conversion:** manual age-class transitions (minor→teen, teen→adult) with parent consent tracking
+- **Lessons + attendance:** lesson scheduling, recurring occurrences, attendance tracking, absence policies, ICS calendar export
+- **Student dashboard:** streak service (current + longest + weekly minutes), 5 web pages (dashboard, assignments, recordings, sessions, profile)
+- **Parent dashboard:** children overview with per-child summary, schedule, progress (gated by permission), payments, messages, deletion request dialog
+- **Beta rollout scaffolding:** feedback collection, landing page tokens, onboarding checklist
+- **COPPA 15-day grace deletion:** parent-initiated with email confirmation, T-7/T-1 reminders, hard-delete worker (pg_cron), R2 deletion queue
+- **R2 credential scoping:** separate API client (read/write) vs deletion worker client (delete-capable) with distinct env vars
+- **Data seeding:** Polymet reference data + edge-case seed scripts with Makefile targets
+- **Expo student mobile app:** 5 screens (dashboard, assignments, recording, profile, settings) with MediaRecorder, session persistence via Zustand
+- **2.5-stage deploy pipeline:** GitHub Actions workflow with staging auto-deploy + production manual approval gate, EAS build profiles
+
+### Fixed
+- COPPA deletion: wrong column name (child_id → child_user_id) in parent-child verification
+- COPPA deletion: missing parent ownership check on confirmation endpoint
+- Impersonation: role escalation prevented (impersonated sessions get role=None, not superadmin)
+- Impersonation: 8-hour session TTL (was unlimited)
+- COPPA deletion: constant-time token hash comparison (hmac.compare_digest)
+- Student + parent dashboards: 1-year lookback on streak queries (was unbounded)
+- Lessons: 10k row safety cap on ICS calendar export
+
 ## [0.2.0.0] - 2026-04-16
 
 ### Added

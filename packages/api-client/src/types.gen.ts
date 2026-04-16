@@ -178,6 +178,33 @@ export type InvitationResponse = {
     updated_at: string;
 };
 
+export type LoanCreateRequest = {
+    description?: (string | null);
+    item_name: string;
+    loaned_at?: (string | null);
+    student_user_id: string;
+    studio_id: string;
+};
+
+export type LoanResponse = {
+    created_at: string;
+    created_by: string;
+    description?: (string | null);
+    id: string;
+    item_name: string;
+    loaned_at: string;
+    returned_at?: (string | null);
+    student_user_id: string;
+    studio_id: string;
+    updated_at: string;
+};
+
+export type LoanUpdateRequest = {
+    description?: (string | null);
+    item_name?: (string | null);
+    returned_at?: (string | null);
+};
+
 export type MessageCreateRequest = {
     body: string;
 };
@@ -202,6 +229,31 @@ export type NotificationTemplateResponse = {
     title_template: string;
     trigger_source: string;
     updated_at: string;
+};
+
+export type ParentChildPermissions = {
+    can_communicate_with_teacher: boolean;
+    can_manage_payments: boolean;
+    can_view_progress: boolean;
+    child_user_id: string;
+    created_at: string;
+    id: string;
+    is_primary_contact: boolean;
+    parent_id: string;
+    parent_user_id: string;
+};
+
+export type ParentChildPermissionUpdate = {
+    can_communicate_with_teacher?: (boolean | null);
+    can_manage_payments?: (boolean | null);
+    can_view_progress?: (boolean | null);
+    is_primary_contact?: (boolean | null);
+};
+
+export type ParentInfo = {
+    children?: Array<ParentChildPermissions>;
+    parent_id: string;
+    user_id: string;
 };
 
 export type PreferencesResponse = {
@@ -294,6 +346,22 @@ export type SettingResponse = {
 export type SettingUpdateRequest = {
     description?: (string | null);
     value_json: unknown;
+};
+
+export type StudentDetail = {
+    email?: (string | null);
+    joined_at: string;
+    loans?: Array<LoanResponse>;
+    parents?: Array<ParentInfo>;
+    role: string;
+    user_id: string;
+};
+
+export type StudentListItem = {
+    email?: (string | null);
+    joined_at: string;
+    role: string;
+    user_id: string;
 };
 
 export type StudioCreateRequest = {

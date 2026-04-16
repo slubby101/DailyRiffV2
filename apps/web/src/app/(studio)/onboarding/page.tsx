@@ -113,7 +113,6 @@ export default function StudioOnboardingPage() {
                   value={studioName}
                   onChange={(e) => setStudioName(e.target.value)}
                   placeholder="e.g. Mitchell Music Studio"
-                  autoFocus
                 />
               </div>
               <div>

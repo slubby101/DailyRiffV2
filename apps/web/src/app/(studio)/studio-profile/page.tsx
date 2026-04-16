@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { STUDIO_PALETTE, getStudioThemeStyle } from "@/lib/studio-theme";
@@ -184,9 +185,11 @@ export default function StudioProfilePage() {
           <CardContent>
             <div className="flex items-center gap-4">
               {studio.logo_url ? (
-                <img
+                <Image
                   src={studio.logo_url}
                   alt={`${studio.display_name || studio.name} logo`}
+                  width={64}
+                  height={64}
                   className="h-16 w-16 rounded-lg object-cover border"
                 />
               ) : (

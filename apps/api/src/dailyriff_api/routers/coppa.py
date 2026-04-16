@@ -1,9 +1,11 @@
-"""COPPA VPC endpoints — consent initiation, confirmation, signed-form, revocation, webhook.
+"""COPPA VPC endpoints — consent initiation, signed-form, revocation, webhook.
+
+Consent confirmation happens ONLY via the Stripe webhook path (signature-verified).
+The client-side confirm endpoint was removed to prevent bypassing Stripe verification.
 
 Public (requires auth):
   POST   /coppa/initiate             — create Setup Intent + pending consent
-  POST   /coppa/confirm              — confirm consent after Setup Intent succeeds
-  POST   /coppa/signed-form          — signed-form escape hatch
+  POST   /coppa/signed-form          — signed-form escape hatch (HTTPS URLs only)
   POST   /coppa/revoke               — revoke verified consent
   GET    /coppa/consent               — get consent status for a child
 
@@ -22,7 +24,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from dailyriff_api.auth import CurrentUser, get_current_user, PROTECTED_RESPONSES
 from dailyriff_api.db import service_transaction
 from dailyriff_api.schemas.coppa import (
-    CoppaConfirmRequest,
     CoppaConsentResponse,
     CoppaInitiateRequest,
     CoppaInitiateResponse,
@@ -101,47 +102,6 @@ def _get_stripe_client():
 
 
 # ---------------------------------------------------------------------------
-# POST /coppa/confirm — confirm consent after Setup Intent
-# ---------------------------------------------------------------------------
-
-
-@router.post(
-    "/confirm",
-    response_model=CoppaConsentResponse,
-    responses=PROTECTED_RESPONSES,
-)
-async def confirm_coppa_consent(
-    body: CoppaConfirmRequest,
-    user: CurrentUser = Depends(get_current_user),
-) -> CoppaConsentResponse:
-    """Confirm a pending COPPA consent after Stripe Setup Intent succeeds."""
-    async with service_transaction() as conn:
-        parent = await conn.fetchrow(
-            "SELECT id FROM parents WHERE user_id = $1",
-            user.id,
-        )
-        if parent is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only parents can confirm COPPA consent",
-            )
-
-    svc = CoppaService()
-    result = await svc.confirm_consent(
-        consent_id=body.consent_id,
-        setup_intent_id=body.setup_intent_id,
-        parent_id=parent["id"],
-    )
-    if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Consent not found or not in pending state",
-        )
-
-    return CoppaConsentResponse(**result)
-
-
-# ---------------------------------------------------------------------------
 # POST /coppa/signed-form — signed-form escape hatch
 # ---------------------------------------------------------------------------
 
@@ -168,11 +128,17 @@ async def submit_signed_form(
             )
 
     svc = CoppaService()
-    result = await svc.submit_signed_form(
-        consent_id=body.consent_id,
-        form_url=body.form_url,
-        parent_id=parent["id"],
-    )
+    try:
+        result = await svc.submit_signed_form(
+            consent_id=body.consent_id,
+            form_url=body.form_url,
+            parent_id=parent["id"],
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
+import { AccountConversionDialog } from "@/components/account-conversion-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -404,6 +405,15 @@ export default function TeacherStudentDetailPage() {
             {new Date(student.joined_at).toLocaleDateString()}
           </p>
         </div>
+      </div>
+
+      {/* Account Conversion */}
+      <div className="flex items-center gap-3">
+        <h2 className="text-xl font-semibold">Account Type</h2>
+        <AccountConversionDialog
+          studioId={studioId}
+          childUserId={student.user_id}
+        />
       </div>
 
       {/* Parents / Guardians */}

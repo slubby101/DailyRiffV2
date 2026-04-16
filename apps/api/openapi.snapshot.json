@@ -1,6 +1,278 @@
 {
   "components": {
     "schemas": {
+      "AbsencePolicyResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "auto_notify_after_absences": {
+            "title": "Auto Notify After Absences",
+            "type": "integer"
+          },
+          "cancellation_notice_hours": {
+            "title": "Cancellation Notice Hours",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "makeup_window_days": {
+            "title": "Makeup Window Days",
+            "type": "integer"
+          },
+          "max_absences_per_term": {
+            "title": "Max Absences Per Term",
+            "type": "integer"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studio_id",
+          "max_absences_per_term",
+          "makeup_window_days",
+          "auto_notify_after_absences",
+          "cancellation_notice_hours",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AbsencePolicyResponse",
+        "type": "object"
+      },
+      "AbsencePolicyUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "auto_notify_after_absences": {
+            "anyOf": [
+              {
+                "maximum": 50.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Notify After Absences"
+          },
+          "cancellation_notice_hours": {
+            "anyOf": [
+              {
+                "maximum": 168.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Notice Hours"
+          },
+          "makeup_window_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Makeup Window Days"
+          },
+          "max_absences_per_term": {
+            "anyOf": [
+              {
+                "maximum": 50.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Absences Per Term"
+          }
+        },
+        "title": "AbsencePolicyUpdateRequest",
+        "type": "object"
+      },
+      "AbsenceReportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "makeup_requested": {
+            "default": false,
+            "title": "Makeup Requested",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "AbsenceReportRequest",
+        "type": "object"
+      },
+      "AbsenceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "makeup_occurrence_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Makeup Occurrence Id"
+          },
+          "makeup_requested": {
+            "title": "Makeup Requested",
+            "type": "boolean"
+          },
+          "occurrence_id": {
+            "format": "uuid",
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reported_by": {
+            "format": "uuid",
+            "title": "Reported By",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "occurrence_id",
+          "studio_id",
+          "reported_by",
+          "status",
+          "makeup_requested",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AbsenceResponse",
+        "type": "object"
+      },
+      "AccountAccessLogEntry": {
+        "additionalProperties": false,
+        "description": "Single entry in a user's Account Access Log (read-only).",
+        "properties": {
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "impersonator_user_id": {
+            "format": "uuid",
+            "title": "Impersonator User Id",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "silent",
+              "live"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "playback_count": {
+            "default": 0,
+            "title": "Playback Count",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "impersonator_user_id",
+          "reason",
+          "mode",
+          "started_at"
+        ],
+        "title": "AccountAccessLogEntry",
+        "type": "object"
+      },
       "AcknowledgementResponse": {
         "additionalProperties": false,
         "properties": {
@@ -334,6 +606,274 @@
         "title": "AssignmentResponse",
         "type": "object"
       },
+      "AssignmentSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "created_at"
+        ],
+        "title": "AssignmentSummary",
+        "type": "object"
+      },
+      "AttendanceMarkRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attendance_status": {
+            "pattern": "^(present|absent|late|excused|cancelled)$",
+            "title": "Attendance Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attendance_status"
+        ],
+        "title": "AttendanceMarkRequest",
+        "type": "object"
+      },
+      "BetaFeedbackCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "category": {
+            "default": "other",
+            "enum": [
+              "bug",
+              "feature_request",
+              "usability",
+              "performance",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "severity": {
+            "default": "medium",
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "BetaFeedbackCreateRequest",
+        "type": "object"
+      },
+      "BetaFeedbackResolveRequest": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "BetaFeedbackResolveRequest",
+        "type": "object"
+      },
+      "BetaFeedbackResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "bug",
+              "feature_request",
+              "usability",
+              "performance",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          },
+          "submitted_by": {
+            "format": "uuid",
+            "title": "Submitted By",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studio_id",
+          "submitted_by",
+          "category",
+          "severity",
+          "body",
+          "submitted_at",
+          "resolved_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BetaFeedbackResponse",
+        "type": "object"
+      },
+      "BetaLandingTokenCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "title": "BetaLandingTokenCreateRequest",
+        "type": "object"
+      },
+      "BetaLandingTokenResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "description",
+          "is_active",
+          "created_by",
+          "created_at"
+        ],
+        "title": "BetaLandingTokenResponse",
+        "type": "object"
+      },
+      "BetaLandingValidateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "BetaLandingValidateRequest",
+        "type": "object"
+      },
       "CategoryPreferenceResponse": {
         "additionalProperties": false,
         "properties": {
@@ -400,6 +940,412 @@
         "title": "CategoryPreferenceUpsertRequest",
         "type": "object"
       },
+      "ChildPaymentItem": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "memo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memo"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "status",
+          "created_at"
+        ],
+        "title": "ChildPaymentItem",
+        "type": "object"
+      },
+      "ChildPaymentsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "child_user_id": {
+            "format": "uuid",
+            "title": "Child User Id",
+            "type": "string"
+          },
+          "payments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ChildPaymentItem"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "total_paid": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Paid",
+            "type": "string"
+          },
+          "total_pending": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Pending",
+            "type": "string"
+          },
+          "total_refunded": {
+            "default": "0",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Refunded",
+            "type": "string"
+          }
+        },
+        "required": [
+          "child_user_id",
+          "studio_id"
+        ],
+        "title": "ChildPaymentsResponse",
+        "type": "object"
+      },
+      "ChildPermissions": {
+        "additionalProperties": false,
+        "properties": {
+          "can_communicate_with_teacher": {
+            "title": "Can Communicate With Teacher",
+            "type": "boolean"
+          },
+          "can_manage_payments": {
+            "title": "Can Manage Payments",
+            "type": "boolean"
+          },
+          "can_view_progress": {
+            "title": "Can View Progress",
+            "type": "boolean"
+          },
+          "is_primary_contact": {
+            "title": "Is Primary Contact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_primary_contact",
+          "can_manage_payments",
+          "can_view_progress",
+          "can_communicate_with_teacher"
+        ],
+        "title": "ChildPermissions",
+        "type": "object"
+      },
+      "ChildProgressResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "child_user_id": {
+            "format": "uuid",
+            "title": "Child User Id",
+            "type": "string"
+          },
+          "completed_assignments": {
+            "default": 0,
+            "title": "Completed Assignments",
+            "type": "integer"
+          },
+          "current_streak": {
+            "default": 0,
+            "title": "Current Streak",
+            "type": "integer"
+          },
+          "is_active": {
+            "default": false,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "longest_streak": {
+            "default": 0,
+            "title": "Longest Streak",
+            "type": "integer"
+          },
+          "recent_recordings": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ChildRecordingItem"
+            },
+            "title": "Recent Recordings",
+            "type": "array"
+          },
+          "total_assignments": {
+            "default": 0,
+            "title": "Total Assignments",
+            "type": "integer"
+          },
+          "total_practice_days": {
+            "default": 0,
+            "title": "Total Practice Days",
+            "type": "integer"
+          },
+          "weekly_minutes": {
+            "default": 0,
+            "title": "Weekly Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "child_user_id"
+        ],
+        "title": "ChildProgressResponse",
+        "type": "object"
+      },
+      "ChildRecordingItem": {
+        "additionalProperties": false,
+        "properties": {
+          "assignment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "uploaded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploaded At"
+          }
+        },
+        "required": [
+          "id",
+          "duration_seconds",
+          "created_at"
+        ],
+        "title": "ChildRecordingItem",
+        "type": "object"
+      },
+      "ChildScheduleItem": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "occurrence_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurrence Id"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "teacher_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Email"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "start_date"
+        ],
+        "title": "ChildScheduleItem",
+        "type": "object"
+      },
+      "ChildSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "child_user_id": {
+            "format": "uuid",
+            "title": "Child User Id",
+            "type": "string"
+          },
+          "current_streak": {
+            "default": 0,
+            "title": "Current Streak",
+            "type": "integer"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "latest_assignment_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Assignment Title"
+          },
+          "next_lesson_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Lesson Date"
+          },
+          "parent_child_id": {
+            "format": "uuid",
+            "title": "Parent Child Id",
+            "type": "string"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/ChildPermissions"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "studio_name": {
+            "title": "Studio Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "child_user_id",
+          "studio_id",
+          "studio_name",
+          "parent_child_id",
+          "permissions"
+        ],
+        "title": "ChildSummary",
+        "type": "object"
+      },
       "ConversationCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -463,24 +1409,151 @@
         "title": "ConversationResponse",
         "type": "object"
       },
-      "CoppaConfirmRequest": {
+      "ConversionEligibilityResponse": {
         "additionalProperties": false,
         "properties": {
-          "consent_id": {
-            "format": "uuid",
-            "title": "Consent Id",
-            "type": "string"
+          "conversions": {
+            "items": {
+              "$ref": "#/components/schemas/ConversionOption"
+            },
+            "title": "Conversions",
+            "type": "array"
           },
-          "setup_intent_id": {
-            "title": "Setup Intent Id",
+          "current": {
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Current",
             "type": "string"
           }
         },
         "required": [
-          "consent_id",
-          "setup_intent_id"
+          "current",
+          "conversions"
         ],
-        "title": "CoppaConfirmRequest",
+        "title": "ConversionEligibilityResponse",
+        "type": "object"
+      },
+      "ConversionOption": {
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "requires_new_credentials": {
+            "title": "Requires New Credentials",
+            "type": "boolean"
+          },
+          "requires_parent_consent": {
+            "title": "Requires Parent Consent",
+            "type": "boolean"
+          },
+          "target": {
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "requires_parent_consent",
+          "requires_new_credentials",
+          "message"
+        ],
+        "title": "ConversionOption",
+        "type": "object"
+      },
+      "ConvertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "new_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Email"
+          },
+          "parent_consent_given": {
+            "default": false,
+            "title": "Parent Consent Given",
+            "type": "boolean"
+          },
+          "target_age_class": {
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Target Age Class",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_age_class"
+        ],
+        "title": "ConvertRequest",
+        "type": "object"
+      },
+      "ConvertResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "child_user_id": {
+            "format": "uuid",
+            "title": "Child User Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "new_age_class": {
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "New Age Class",
+            "type": "string"
+          },
+          "parent_access_removed": {
+            "title": "Parent Access Removed",
+            "type": "boolean"
+          },
+          "previous_age_class": {
+            "enum": [
+              "minor",
+              "teen",
+              "adult"
+            ],
+            "title": "Previous Age Class",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "child_user_id",
+          "studio_id",
+          "previous_age_class",
+          "new_age_class",
+          "parent_access_removed",
+          "message"
+        ],
+        "title": "ConvertResponse",
         "type": "object"
       },
       "CoppaConsentResponse": {
@@ -701,6 +1774,169 @@
           "received"
         ],
         "title": "CoppaWebhookResponse",
+        "type": "object"
+      },
+      "DeletionConfirmRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmation_token": {
+            "title": "Confirmation Token",
+            "type": "string"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "confirmation_token"
+        ],
+        "title": "DeletionConfirmRequest",
+        "type": "object"
+      },
+      "DeletionInitiateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "child_id": {
+            "format": "uuid",
+            "title": "Child Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "child_id",
+          "studio_id"
+        ],
+        "title": "DeletionInitiateRequest",
+        "type": "object"
+      },
+      "DeletionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "child_id": {
+            "format": "uuid",
+            "title": "Child Id",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email_confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Confirmed At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "parent_id": {
+            "format": "uuid",
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "scheduled_delete_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Delete At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "t1_reminder_sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T1 Reminder Sent At"
+          },
+          "t7_reminder_sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T7 Reminder Sent At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "child_id",
+          "studio_id",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DeletionResponse",
         "type": "object"
       },
       "DeviceRegisterRequest": {
@@ -992,6 +2228,136 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "ImpersonationSessionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "ended_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "impersonator_user_id": {
+            "format": "uuid",
+            "title": "Impersonator User Id",
+            "type": "string"
+          },
+          "ip_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Address"
+          },
+          "mode": {
+            "enum": [
+              "silent",
+              "live"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "notification_sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Sent At"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "studio_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Studio Id"
+          },
+          "target_user_id": {
+            "format": "uuid",
+            "title": "Target User Id",
+            "type": "string"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "id",
+          "impersonator_user_id",
+          "target_user_id",
+          "reason",
+          "mode",
+          "started_at"
+        ],
+        "title": "ImpersonationSessionResponse",
+        "type": "object"
+      },
+      "ImpersonationStartRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "default": "silent",
+            "enum": [
+              "silent",
+              "live"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "ImpersonationStartRequest",
+        "type": "object"
+      },
       "InvitationBatchCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1245,6 +2611,343 @@
           "updated_at"
         ],
         "title": "InvitationResponse",
+        "type": "object"
+      },
+      "LessonCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "cadence": {
+            "default": "one_time",
+            "title": "Cadence",
+            "type": "string"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "day_of_week": {
+            "anyOf": [
+              {
+                "maximum": 6.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Of Week"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_minutes": {
+            "maximum": 180.0,
+            "minimum": 15.0,
+            "title": "Duration Minutes",
+            "type": "integer"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "is_recurring": {
+            "default": false,
+            "title": "Is Recurring",
+            "type": "boolean"
+          },
+          "is_trial": {
+            "default": false,
+            "title": "Is Trial",
+            "type": "boolean"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "start_time": {
+            "format": "time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "studio_id",
+          "student_id",
+          "title",
+          "start_time",
+          "duration_minutes",
+          "start_date"
+        ],
+        "title": "LessonCreateRequest",
+        "type": "object"
+      },
+      "LessonResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "cadence": {
+            "title": "Cadence",
+            "type": "string"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "day_of_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Of Week"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_minutes": {
+            "title": "Duration Minutes",
+            "type": "integer"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_paid": {
+            "title": "Is Paid",
+            "type": "boolean"
+          },
+          "is_recurring": {
+            "title": "Is Recurring",
+            "type": "boolean"
+          },
+          "is_trial": {
+            "title": "Is Trial",
+            "type": "boolean"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "start_time": {
+            "format": "time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "teacher_id": {
+            "format": "uuid",
+            "title": "Teacher Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "studio_id",
+          "teacher_id",
+          "student_id",
+          "title",
+          "start_time",
+          "duration_minutes",
+          "start_date",
+          "is_recurring",
+          "cadence",
+          "is_paid",
+          "is_trial",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LessonResponse",
+        "type": "object"
+      },
+      "LessonUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": 15.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "is_trial": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Trial"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "LessonUpdateRequest",
         "type": "object"
       },
       "LoanCreateRequest": {
@@ -1538,6 +3241,241 @@
         "title": "NotificationTemplateResponse",
         "type": "object"
       },
+      "OccurrenceNotesRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "improvement_areas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement Areas"
+          },
+          "next_focus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Focus"
+          },
+          "progress_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress Notes"
+          },
+          "strengths": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strengths"
+          },
+          "teacher_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Notes"
+          }
+        },
+        "title": "OccurrenceNotesRequest",
+        "type": "object"
+      },
+      "OccurrenceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "attendance_status": {
+            "title": "Attendance Status",
+            "type": "string"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_minutes": {
+            "title": "Duration Minutes",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "improvement_areas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement Areas"
+          },
+          "is_makeup": {
+            "title": "Is Makeup",
+            "type": "boolean"
+          },
+          "is_paid": {
+            "title": "Is Paid",
+            "type": "boolean"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "makeup_for_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Makeup For Id"
+          },
+          "marked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked At"
+          },
+          "marked_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked By"
+          },
+          "next_focus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Focus"
+          },
+          "occurrence_date": {
+            "format": "date",
+            "title": "Occurrence Date",
+            "type": "string"
+          },
+          "progress_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress Notes"
+          },
+          "start_time": {
+            "format": "time",
+            "title": "Start Time",
+            "type": "string"
+          },
+          "strengths": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strengths"
+          },
+          "studio_id": {
+            "format": "uuid",
+            "title": "Studio Id",
+            "type": "string"
+          },
+          "teacher_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Notes"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lesson_id",
+          "studio_id",
+          "occurrence_date",
+          "start_time",
+          "duration_minutes",
+          "attendance_status",
+          "is_paid",
+          "is_makeup",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OccurrenceResponse",
+        "type": "object"
+      },
       "OutstandingBalanceResponse": {
         "additionalProperties": false,
         "properties": {
@@ -1685,6 +3623,23 @@
           "created_at"
         ],
         "title": "ParentChildPermissions",
+        "type": "object"
+      },
+      "ParentDashboardResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/ChildSummary"
+            },
+            "title": "Children",
+            "type": "array"
+          }
+        },
+        "required": [
+          "children"
+        ],
+        "title": "ParentDashboardResponse",
         "type": "object"
       },
       "ParentInfo": {
@@ -2157,6 +4112,56 @@
         "title": "RecordingCreateRequest",
         "type": "object"
       },
+      "RecordingHistoryItem": {
+        "additionalProperties": false,
+        "properties": {
+          "assignment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "uploaded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploaded At"
+          }
+        },
+        "required": [
+          "id",
+          "duration_seconds",
+          "created_at"
+        ],
+        "title": "RecordingHistoryItem",
+        "type": "object"
+      },
       "RecordingResponse": {
         "additionalProperties": false,
         "properties": {
@@ -2559,6 +4564,69 @@
           "value_json"
         ],
         "title": "SettingUpdateRequest",
+        "type": "object"
+      },
+      "StreakResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "current_streak": {
+            "title": "Current Streak",
+            "type": "integer"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "longest_streak": {
+            "title": "Longest Streak",
+            "type": "integer"
+          },
+          "total_practice_days": {
+            "title": "Total Practice Days",
+            "type": "integer"
+          },
+          "weekly_minutes": {
+            "title": "Weekly Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current_streak",
+          "longest_streak",
+          "is_active",
+          "total_practice_days",
+          "weekly_minutes"
+        ],
+        "title": "StreakResponse",
+        "type": "object"
+      },
+      "StudentDashboardResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "recent_recordings": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingHistoryItem"
+            },
+            "title": "Recent Recordings",
+            "type": "array"
+          },
+          "streak": {
+            "$ref": "#/components/schemas/StreakResponse"
+          },
+          "upcoming_assignments": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentSummary"
+            },
+            "title": "Upcoming Assignments",
+            "type": "array"
+          }
+        },
+        "required": [
+          "streak",
+          "upcoming_assignments",
+          "recent_recordings"
+        ],
+        "title": "StudentDashboardResponse",
         "type": "object"
       },
       "StudentDetail": {
@@ -3245,6 +5313,564 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/account-access-log": {
+      "get": {
+        "description": "Return the Account Access Log for the authenticated user.\n\nShows every admin impersonation session that targeted this user,\nincluding playback counts from impersonation_playback_log.\nRead-only \u2014 available on the user's settings page.",
+        "operationId": "get_account_access_log_account_access_log_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountAccessLogEntry"
+                  },
+                  "title": "Response Get Account Access Log Account Access Log Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Account Access Log",
+        "tags": [
+          "account-access-log"
+        ]
+      }
+    },
+    "/admin/beta/feedback": {
+      "get": {
+        "description": "List all beta feedback across studios (superadmin only).",
+        "operationId": "list_all_beta_feedback_admin_beta_feedback_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "bug",
+                    "feature_request",
+                    "usability",
+                    "performance",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "severity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "critical",
+                    "high",
+                    "medium",
+                    "low"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Severity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BetaFeedbackResponse"
+                  },
+                  "title": "Response List All Beta Feedback Admin Beta Feedback Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List All Beta Feedback",
+        "tags": [
+          "admin-beta"
+        ]
+      }
+    },
+    "/admin/beta/feedback/{feedback_id}/resolve": {
+      "post": {
+        "description": "Mark beta feedback as resolved (superadmin only).",
+        "operationId": "resolve_beta_feedback_admin_beta_feedback__feedback_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Feedback Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BetaFeedbackResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetaFeedbackResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Feedback not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resolve Beta Feedback",
+        "tags": [
+          "admin-beta"
+        ]
+      }
+    },
+    "/admin/beta/landing-tokens": {
+      "get": {
+        "description": "List all beta landing page tokens (superadmin only).",
+        "operationId": "list_beta_landing_tokens_admin_beta_landing_tokens_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BetaLandingTokenResponse"
+                  },
+                  "title": "Response List Beta Landing Tokens Admin Beta Landing Tokens Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Beta Landing Tokens",
+        "tags": [
+          "admin-beta"
+        ]
+      },
+      "post": {
+        "description": "Create a new beta landing page access token (superadmin only).",
+        "operationId": "create_beta_landing_token_admin_beta_landing_tokens_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BetaLandingTokenCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetaLandingTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Beta Landing Token",
+        "tags": [
+          "admin-beta"
+        ]
+      }
+    },
+    "/admin/beta/studios/{studio_id}/send-onboarding": {
+      "post": {
+        "description": "Send beta onboarding email sequence to studio owner (superadmin only).\n\nFires the beta.welcome notification event to the studio owner.\nThe getting_started and feedback_reminder events are intended to be\ntriggered by pg_cron on a delay (day 1 and day 7), but can also\nbe manually triggered by calling this endpoint with the respective\nevent_type query param in a future iteration.",
+        "operationId": "send_beta_onboarding_admin_beta_studios__studio_id__send_onboarding_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Send Beta Onboarding Admin Beta Studios  Studio Id  Send Onboarding Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Studio not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send Beta Onboarding",
+        "tags": [
+          "admin-beta"
+        ]
+      }
+    },
+    "/admin/impersonation/active": {
+      "get": {
+        "description": "Get the impersonator's currently active session, if any.",
+        "operationId": "get_active_session_admin_impersonation_active_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ImpersonationSessionResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Active Session Admin Impersonation Active Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Active Session",
+        "tags": [
+          "impersonation"
+        ]
+      }
+    },
+    "/admin/impersonation/{session_id}/end": {
+      "post": {
+        "description": "End an active impersonation session.",
+        "operationId": "end_impersonation_admin_impersonation__session_id__end_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpersonationSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "No active session found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "End Impersonation",
+        "tags": [
+          "impersonation"
+        ]
+      }
+    },
+    "/admin/impersonation/{target_user_id}/start": {
+      "post": {
+        "description": "Start an impersonation session for a target user.",
+        "operationId": "start_impersonation_admin_impersonation__target_user_id__start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Target User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpersonationStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpersonationSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Superadmin role required"
+          },
+          "404": {
+            "description": "Target user not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "409": {
+            "description": "Active session already exists"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Impersonation",
+        "tags": [
+          "impersonation"
+        ]
+      }
+    },
     "/admin/studios": {
       "get": {
         "description": "List all studios across the platform (bypasses RLS).",
@@ -4271,6 +6897,50 @@
         ]
       }
     },
+    "/beta/validate-token": {
+      "post": {
+        "description": "Validate a beta landing page token. Returns {valid: bool}.",
+        "operationId": "validate_beta_token_beta_validate_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BetaLandingValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Validate Beta Token Beta Validate Token Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Beta Token",
+        "tags": [
+          "beta"
+        ]
+      }
+    },
     "/conversations": {
       "get": {
         "operationId": "list_conversations_conversations_get",
@@ -4573,55 +7243,6 @@
         ]
       }
     },
-    "/coppa/confirm": {
-      "post": {
-        "description": "Confirm a pending COPPA consent after Stripe Setup Intent succeeds.",
-        "operationId": "confirm_coppa_consent_coppa_confirm_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CoppaConfirmRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CoppaConsentResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "description": "Bad request \u2014 invalid input"
-          },
-          "401": {
-            "description": "Not authenticated"
-          },
-          "405": {
-            "description": "Method not allowed"
-          },
-          "422": {
-            "description": "Validation error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Confirm Coppa Consent",
-        "tags": [
-          "coppa"
-        ]
-      }
-    },
     "/coppa/consent": {
       "get": {
         "description": "Get the current COPPA consent status for a child in a studio.",
@@ -4686,6 +7307,225 @@
         "summary": "Get Coppa Consent",
         "tags": [
           "coppa"
+        ]
+      }
+    },
+    "/coppa/deletion/confirm": {
+      "post": {
+        "description": "Confirm deletion via email token. Schedules 15-day grace period.",
+        "operationId": "confirm_deletion_coppa_deletion_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletionConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Request not found or invalid token"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Confirm Deletion",
+        "tags": [
+          "coppa-deletion"
+        ]
+      }
+    },
+    "/coppa/deletion/initiate": {
+      "post": {
+        "description": "Parent initiates child data deletion. Returns pending request.",
+        "operationId": "initiate_deletion_coppa_deletion_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeletionInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Initiate Deletion",
+        "tags": [
+          "coppa-deletion"
+        ]
+      }
+    },
+    "/coppa/deletion/status": {
+      "get": {
+        "description": "Get the most recent active deletion request for a child.",
+        "operationId": "get_deletion_status_coppa_deletion_status_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "child_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Child Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "No active deletion request"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Deletion Status",
+        "tags": [
+          "coppa-deletion"
+        ]
+      }
+    },
+    "/coppa/deletion/{request_id}/cancel": {
+      "post": {
+        "description": "Cancel a pending or scheduled deletion. Available any time before T-0.",
+        "operationId": "cancel_deletion_coppa_deletion__request_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Request not found or cannot be cancelled"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Deletion",
+        "tags": [
+          "coppa-deletion"
         ]
       }
     },
@@ -5537,6 +8377,248 @@
         ]
       }
     },
+    "/parent/children": {
+      "get": {
+        "description": "List all children with dashboard summary data.",
+        "operationId": "list_children_parent_children_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentDashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Children",
+        "tags": [
+          "parent-dashboard"
+        ]
+      }
+    },
+    "/parent/children/{child_user_id}/payments": {
+      "get": {
+        "description": "Read-only payment history + outstanding balance for a child.",
+        "operationId": "get_child_payments_parent_children__child_user_id__payments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "child_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Child User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildPaymentsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Child Payments",
+        "tags": [
+          "parent-dashboard"
+        ]
+      }
+    },
+    "/parent/children/{child_user_id}/progress": {
+      "get": {
+        "description": "Streaks, assignment completion, recent recordings for a child.",
+        "operationId": "get_child_progress_parent_children__child_user_id__progress_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "child_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Child User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildProgressResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Child Progress",
+        "tags": [
+          "parent-dashboard"
+        ]
+      }
+    },
+    "/parent/children/{child_user_id}/schedule": {
+      "get": {
+        "description": "Upcoming lesson schedule for a child.",
+        "operationId": "get_child_schedule_parent_children__child_user_id__schedule_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "child_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Child User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChildScheduleItem"
+                  },
+                  "title": "Response Get Child Schedule Parent Children  Child User Id  Schedule Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Child Schedule",
+        "tags": [
+          "parent-dashboard"
+        ]
+      }
+    },
     "/recordings": {
       "get": {
         "operationId": "list_recordings_recordings_get",
@@ -5651,6 +8733,67 @@
       }
     },
     "/recordings/{recording_id}": {
+      "delete": {
+        "description": "Soft-delete a recording by setting deleted_at. Requires typing DELETE.",
+        "operationId": "soft_delete_recording_recordings__recording_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recording_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Recording Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "confirmation_text",
+            "required": true,
+            "schema": {
+              "title": "Confirmation Text",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Confirmation text must be DELETE"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Recording not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Soft Delete Recording",
+        "tags": [
+          "recordings"
+        ]
+      },
       "get": {
         "operationId": "get_recording_recordings__recording_id__get",
         "parameters": [
@@ -6349,6 +9492,220 @@
         ]
       }
     },
+    "/student/assignments": {
+      "get": {
+        "description": "List assignments for the authenticated student.",
+        "operationId": "list_student_assignments_student_assignments_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignmentSummary"
+                  },
+                  "title": "Response List Student Assignments Student Assignments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Student Assignments",
+        "tags": [
+          "student-dashboard"
+        ]
+      }
+    },
+    "/student/dashboard": {
+      "get": {
+        "description": "Aggregated student dashboard: streak, upcoming assignments, recent recordings.",
+        "operationId": "get_student_dashboard_student_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Student Dashboard",
+        "tags": [
+          "student-dashboard"
+        ]
+      }
+    },
+    "/student/recordings": {
+      "get": {
+        "description": "Recording history for the authenticated student.",
+        "operationId": "list_student_recordings_student_recordings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecordingHistoryItem"
+                  },
+                  "title": "Response List Student Recordings Student Recordings Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Student Recordings",
+        "tags": [
+          "student-dashboard"
+        ]
+      }
+    },
+    "/student/streak": {
+      "get": {
+        "description": "Current streak and weekly minutes for the authenticated student.",
+        "operationId": "get_streak_student_streak_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreakResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Streak",
+        "tags": [
+          "student-dashboard"
+        ]
+      }
+    },
     "/studios": {
       "get": {
         "operationId": "list_studios_studios_get",
@@ -6548,6 +9905,508 @@
         "summary": "Update Studio",
         "tags": [
           "studios"
+        ]
+      }
+    },
+    "/studios/{studio_id}/absence-policy": {
+      "get": {
+        "description": "Get the studio's absence policy.",
+        "operationId": "get_absence_policy_studios__studio_id__absence_policy_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AbsencePolicyResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Absence Policy Studios  Studio Id  Absence Policy Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Absence Policy",
+        "tags": [
+          "lessons"
+        ]
+      },
+      "put": {
+        "description": "Create or update the studio's absence policy. Teacher/owner only.",
+        "operationId": "upsert_absence_policy_studios__studio_id__absence_policy_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbsencePolicyUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbsencePolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upsert Absence Policy",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/absences": {
+      "get": {
+        "description": "List absences in a studio.",
+        "operationId": "list_absences_studios__studio_id__absences_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by absence status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by absence status",
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AbsenceResponse"
+                  },
+                  "title": "Response List Absences Studios  Studio Id  Absences Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Absences",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/absences/{absence_id}": {
+      "patch": {
+        "description": "Update absence status. Teacher/owner only.",
+        "operationId": "update_absence_status_studios__studio_id__absences__absence_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "absence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Absence Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Target absence status",
+            "in": "query",
+            "name": "target_status",
+            "required": true,
+            "schema": {
+              "description": "Target absence status",
+              "title": "Target Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbsenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Absence Status",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/absences/{absence_id}/schedule-makeup": {
+      "post": {
+        "description": "Schedule a makeup lesson for an absence. Teacher/owner only.",
+        "operationId": "schedule_makeup_studios__studio_id__absences__absence_id__schedule_makeup_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "absence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Absence Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Date for the makeup lesson",
+            "in": "query",
+            "name": "makeup_date",
+            "required": true,
+            "schema": {
+              "description": "Date for the makeup lesson",
+              "format": "date",
+              "title": "Makeup Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbsenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Schedule Makeup",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/beta/feedback": {
+      "get": {
+        "description": "List beta feedback for a studio (beta-studio members only).",
+        "operationId": "list_studio_beta_feedback_studios__studio_id__beta_feedback_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BetaFeedbackResponse"
+                  },
+                  "title": "Response List Studio Beta Feedback Studios  Studio Id  Beta Feedback Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Studio Beta Feedback",
+        "tags": [
+          "beta"
+        ]
+      },
+      "post": {
+        "description": "Submit beta feedback for a studio (beta-studio members only).",
+        "operationId": "submit_beta_feedback_studios__studio_id__beta_feedback_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BetaFeedbackCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetaFeedbackResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit Beta Feedback",
+        "tags": [
+          "beta"
         ]
       }
     },
@@ -6822,6 +10681,509 @@
         "summary": "Regenerate Invitation Token",
         "tags": [
           "invitations"
+        ]
+      }
+    },
+    "/studios/{studio_id}/lessons": {
+      "get": {
+        "description": "List lessons in a studio.",
+        "operationId": "list_lessons_studios__studio_id__lessons_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by student",
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by student",
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LessonResponse"
+                  },
+                  "title": "Response List Lessons Studios  Studio Id  Lessons Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Lessons",
+        "tags": [
+          "lessons"
+        ]
+      },
+      "post": {
+        "description": "Create a lesson template. Teacher/owner only.",
+        "operationId": "create_lesson_studios__studio_id__lessons_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LessonCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Lesson",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/lessons/export.ics": {
+      "get": {
+        "description": "Export lesson occurrences as ICS calendar file.",
+        "operationId": "export_lessons_ics_studios__studio_id__lessons_export_ics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start date filter",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date filter",
+              "title": "Start"
+            }
+          },
+          {
+            "description": "End date filter",
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date filter",
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/calendar": {}
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Lessons Ics",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/lessons/{lesson_id}": {
+      "delete": {
+        "description": "Delete a lesson and all its occurrences. Teacher/owner only.",
+        "operationId": "delete_lesson_studios__studio_id__lessons__lesson_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Lesson",
+        "tags": [
+          "lessons"
+        ]
+      },
+      "get": {
+        "description": "Get a lesson by ID.",
+        "operationId": "get_lesson_studios__studio_id__lessons__lesson_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Lesson",
+        "tags": [
+          "lessons"
+        ]
+      },
+      "patch": {
+        "description": "Update a lesson. Teacher/owner only.",
+        "operationId": "update_lesson_studios__studio_id__lessons__lesson_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LessonUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Lesson",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/lessons/{lesson_id}/generate-occurrences": {
+      "post": {
+        "description": "Materialize occurrences from a lesson template. Teacher/owner only.",
+        "operationId": "generate_lesson_occurrences_studios__studio_id__lessons__lesson_id__generate_occurrences_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OccurrenceResponse"
+                  },
+                  "title": "Response Generate Lesson Occurrences Studios  Studio Id  Lessons  Lesson Id  Generate Occurrences Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate Lesson Occurrences",
+        "tags": [
+          "lessons"
         ]
       }
     },
@@ -7169,6 +11531,427 @@
         "summary": "Update Loan",
         "tags": [
           "teacher-students"
+        ]
+      }
+    },
+    "/studios/{studio_id}/occurrences": {
+      "get": {
+        "description": "List lesson occurrences in a studio, optionally filtered by date range.",
+        "operationId": "list_occurrences_studios__studio_id__occurrences_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start date (inclusive)",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start date (inclusive)",
+              "title": "Start"
+            }
+          },
+          {
+            "description": "End date (inclusive)",
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date (inclusive)",
+              "title": "End"
+            }
+          },
+          {
+            "description": "Filter by student",
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by student",
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OccurrenceResponse"
+                  },
+                  "title": "Response List Occurrences Studios  Studio Id  Occurrences Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Occurrences",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/occurrences/{occurrence_id}": {
+      "get": {
+        "description": "Get a single occurrence.",
+        "operationId": "get_occurrence_studios__studio_id__occurrences__occurrence_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccurrenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Occurrence",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/occurrences/{occurrence_id}/attendance": {
+      "patch": {
+        "description": "Mark attendance for an occurrence. Teacher/owner only.",
+        "operationId": "mark_attendance_studios__studio_id__occurrences__occurrence_id__attendance_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceMarkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccurrenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Mark Attendance",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/occurrences/{occurrence_id}/notes": {
+      "patch": {
+        "description": "Update lesson notes for an occurrence. Teacher/owner only.",
+        "operationId": "update_occurrence_notes_studios__studio_id__occurrences__occurrence_id__notes_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OccurrenceNotesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccurrenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Occurrence Notes",
+        "tags": [
+          "lessons"
+        ]
+      }
+    },
+    "/studios/{studio_id}/occurrences/{occurrence_id}/report-absence": {
+      "post": {
+        "description": "Report an absence for a lesson occurrence. Any studio member can report.",
+        "operationId": "report_absence_studios__studio_id__occurrences__occurrence_id__report_absence_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbsenceReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbsenceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Report Absence",
+        "tags": [
+          "lessons"
         ]
       }
     },
@@ -7756,6 +12539,144 @@
         "summary": "List Students",
         "tags": [
           "teacher-students"
+        ]
+      }
+    },
+    "/studios/{studio_id}/students/{child_user_id}/conversion-eligibility": {
+      "get": {
+        "description": "Check what account conversions are available for a student.",
+        "operationId": "get_conversion_eligibility_studios__studio_id__students__child_user_id__conversion_eligibility_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "child_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Child User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionEligibilityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Student not found in studio"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Conversion Eligibility",
+        "tags": [
+          "account-conversion"
+        ]
+      }
+    },
+    "/studios/{studio_id}/students/{child_user_id}/convert": {
+      "post": {
+        "description": "Perform a manual account conversion for a student.",
+        "operationId": "convert_account_studios__studio_id__students__child_user_id__convert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "studio_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Studio Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "child_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Child User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConvertResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad request \u2014 invalid input"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "404": {
+            "description": "Student not found"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Conversion requirements not met"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Convert Account",
+        "tags": [
+          "account-conversion"
         ]
       }
     },

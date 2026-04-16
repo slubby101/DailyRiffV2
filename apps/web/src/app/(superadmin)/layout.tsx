@@ -12,6 +12,7 @@ import {
   Settings,
   ClipboardCheck,
   ListOrdered,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
     icon: ClipboardCheck,
   },
   { href: "/waitlist", label: "Waitlist", icon: ListOrdered },
+  { href: "/beta-feedback", label: "Beta Feedback", icon: MessageSquare },
 ] as const;
 
 export default function SuperadminLayout({

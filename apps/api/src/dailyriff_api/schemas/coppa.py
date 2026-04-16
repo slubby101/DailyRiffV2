@@ -27,13 +27,6 @@ class CoppaInitiateResponse(BaseModel):
     status: CoppaConsentStatus
 
 
-class CoppaConfirmRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    consent_id: UUID
-    setup_intent_id: str
-
-
 class CoppaSignedFormRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

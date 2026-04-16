@@ -195,6 +195,41 @@ async def confirm_upload(
     return RecordingResponse(**dict(row))
 
 
+@router.delete(
+    "/{recording_id}",
+    response_model=RecordingResponse,
+    responses={
+        **PROTECTED_RESPONSES,
+        400: {"description": "Confirmation text must be DELETE"},
+        404: {"description": "Recording not found"},
+    },
+)
+async def soft_delete_recording(
+    recording_id: UUID,
+    confirmation_text: str,
+    user: CurrentUser = Depends(get_current_user),
+) -> RecordingResponse:
+    """Soft-delete a recording by setting deleted_at. Requires typing DELETE."""
+    if confirmation_text != "DELETE":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='confirmation_text must be exactly "DELETE"',
+        )
+    now = datetime.now(tz.utc)
+    async with rls_transaction(user.id) as conn:
+        row = await conn.fetchrow(
+            f"UPDATE recordings SET deleted_at = $2, updated_at = $2 "
+            f"WHERE id = $1 AND student_id = $3 AND deleted_at IS NULL "
+            f"RETURNING {RECORDING_COLUMNS}",
+            recording_id,
+            now,
+            user.id,
+        )
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return RecordingResponse(**dict(row))
+
+
 @router.get(
     "/{recording_id}/playback-url",
     response_model=PlaybackUrlResponse,

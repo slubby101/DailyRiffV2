@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone as tz
 from typing import Any, Protocol
+from urllib.parse import urlparse
 from uuid import UUID
 
 from dailyriff_api.db import service_transaction
@@ -76,45 +77,15 @@ class CoppaService:
             "status": row["status"],
         }
 
-    async def confirm_consent(
-        self,
-        *,
-        consent_id: UUID,
-        setup_intent_id: str,
-        parent_id: UUID,
-    ) -> dict[str, Any] | None:
-        """Confirm a pending COPPA consent after Stripe Setup Intent succeeds.
-
-        Returns updated consent dict or None if consent is not in pending state.
-        """
-        async with service_transaction() as conn:
-            # Fetch the consent and verify ownership + status
-            row = await conn.fetchrow(
-                f"SELECT {COPPA_CONSENT_COLUMNS} FROM coppa_consents "
-                f"WHERE id = $1 AND parent_id = $2",
-                consent_id,
-                parent_id,
-            )
-            if row is None:
-                return None
-            if row["status"] != "pending":
-                return None
-            if row["stripe_setup_intent_id"] != setup_intent_id:
-                return None
-
-            now = datetime.now(tz.utc)
-            updated = await conn.fetchrow(
-                f"UPDATE coppa_consents "
-                f"SET status = 'verified', verified_at = $2, updated_at = $2 "
-                f"WHERE id = $1 AND status = 'pending' "
-                f"RETURNING {COPPA_CONSENT_COLUMNS}",
-                consent_id,
-                now,
-            )
-
-        if updated is None:
-            return None
-        return dict(updated)
+    @staticmethod
+    def _validate_form_url(form_url: str) -> None:
+        """Validate that form_url is a well-formed HTTPS URL."""
+        try:
+            parsed = urlparse(form_url)
+        except Exception:
+            raise ValueError("form_url must be a valid HTTPS URL")
+        if parsed.scheme != "https" or not parsed.netloc:
+            raise ValueError("form_url must be a valid HTTPS URL")
 
     async def submit_signed_form(
         self,
@@ -127,6 +98,8 @@ class CoppaService:
 
         Returns updated consent dict or None if not in pending state.
         """
+        self._validate_form_url(form_url)
+
         async with service_transaction() as conn:
             row = await conn.fetchrow(
                 f"SELECT {COPPA_CONSENT_COLUMNS} FROM coppa_consents "

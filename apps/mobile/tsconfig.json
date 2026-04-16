@@ -9,5 +9,5 @@
       "@dailyriff/api-client": ["../../packages/api-client/src"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "__tests__/**/*.ts", "__tests__/**/*.tsx", "app.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "app/**/*.ts", "app/**/*.tsx", "__tests__/**/*.ts", "__tests__/**/*.tsx", "app.config.ts"]
 }

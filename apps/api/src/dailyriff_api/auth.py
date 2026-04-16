@@ -17,7 +17,7 @@ from uuid import UUID
 
 import httpx
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.algorithms import ECAlgorithm
 
@@ -132,6 +132,7 @@ async def _decode_token(token: str) -> dict:
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    request: Request = None,  # type: ignore[assignment]
 ) -> CurrentUser:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise _unauthorized()
@@ -160,10 +161,55 @@ async def get_current_user(
         entry.get("method") == "totp" for entry in amr if isinstance(entry, dict)
     )
 
+    role = app_metadata.get("role")
+
+    # --- Impersonation header ---
+    # When a superadmin sends X-Impersonation-Session, we validate the
+    # session and return a CurrentUser representing the *target* user,
+    # with impersonation_session_id set for audit purposes.
+    imp_header = (
+        request.headers.get("x-impersonation-session") if request else None
+    )
+    if imp_header:
+        if role != "superadmin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only superadmins can use impersonation sessions",
+            )
+        try:
+            session_id = UUID(imp_header)
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid impersonation session ID",
+            ) from exc
+        # Validate session is active — import here to avoid circular deps
+        from dailyriff_api.db import service_transaction
+        from dailyriff_api.services import impersonation_service
+
+        async with service_transaction() as conn:
+            session = await impersonation_service.validate_session(
+                conn, session_id=session_id
+            )
+        if session is None or session["impersonator_user_id"] != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid or expired impersonation session",
+            )
+        # Use the target user's context, NOT the impersonator's role.
+        # role=None ensures impersonated sessions cannot pass require_superadmin.
+        return CurrentUser(
+            id=session["target_user_id"],
+            email=None,
+            role=None,
+            impersonation_session_id=session_id,
+            has_totp=False,
+        )
+
     return CurrentUser(
         id=user_id,
         email=payload.get("email"),
-        role=app_metadata.get("role"),
+        role=role,
         has_totp=has_totp,
     )
 
@@ -213,4 +259,21 @@ def require_superadmin(
                 detail="TOTP verification required for superadmin access",
             )
 
+    return user
+
+
+def require_not_impersonating(
+    user: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    """Block scope-restricted operations during impersonation sessions.
+
+    Use as a dependency on endpoints that must never be called while
+    impersonating: password changes, account deletion, email changes,
+    2FA changes, OAuth authorization, data deletion.
+    """
+    if user.impersonation_session_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action is not permitted during an impersonation session",
+        )
     return user

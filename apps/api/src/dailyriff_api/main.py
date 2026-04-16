@@ -7,14 +7,17 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+import os
+
 import asyncpg
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
 from dailyriff_api.db import close_pool, init_pool
 from dailyriff_api.rate_limit import limiter, rate_limit_exceeded_handler
-from dailyriff_api.routers import admin, assignments, coppa, devices, employees, health, invitations, messaging, notification_templates, payments, preferences, recordings, resources, settings, studios, teacher_students, waitlist
+from dailyriff_api.routers import account_conversion, admin, assignments, beta, coppa, coppa_deletion, devices, employees, health, impersonation, invitations, lessons, messaging, notification_templates, parent_dashboard, payments, preferences, recordings, resources, settings, student_dashboard, studios, teacher_students, waitlist
 
 
 @asynccontextmanager
@@ -25,6 +28,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="DailyRiff API", version="0.0.0", lifespan=lifespan)
+
+_CORS_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*", "X-Impersonation-Session"],
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
@@ -48,12 +61,19 @@ async def _asyncpg_data_error_handler(
     )
 
 
+app.include_router(account_conversion.router)
 app.include_router(admin.router)
+app.include_router(beta.router)
+app.include_router(beta.public_router)
+app.include_router(beta.admin_router)
 app.include_router(assignments.router)
 app.include_router(coppa.router)
+app.include_router(coppa_deletion.router)
 app.include_router(health.router)
 app.include_router(devices.router)
 app.include_router(employees.router)
+app.include_router(impersonation.router)
+app.include_router(impersonation.access_log_router)
 app.include_router(preferences.router)
 app.include_router(settings.router)
 app.include_router(studios.router)
@@ -62,8 +82,11 @@ app.include_router(resources.router)
 app.include_router(messaging.router)
 app.include_router(notification_templates.router)
 app.include_router(invitations.router)
+app.include_router(lessons.router)
 app.include_router(invitations.public_router)
+app.include_router(parent_dashboard.router)
 app.include_router(payments.router)
+app.include_router(student_dashboard.router)
 app.include_router(teacher_students.router)
 app.include_router(waitlist.router)
 app.include_router(waitlist.admin_router)

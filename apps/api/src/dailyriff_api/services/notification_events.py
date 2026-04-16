@@ -57,6 +57,10 @@ class EventType(str, enum.Enum):
     # Superadmin events
     SUPERADMIN_DAILY_WAITLIST_DIGEST = "superadmin.daily_waitlist_digest"
     SUPERADMIN_VERIFICATION_QUEUE_OVERDUE = "superadmin.verification_queue_overdue"
+    # Beta onboarding events
+    BETA_WELCOME = "beta.welcome"
+    BETA_GETTING_STARTED = "beta.getting_started"
+    BETA_FEEDBACK_REMINDER = "beta.feedback_reminder"
 
 
 class NotificationEventService:

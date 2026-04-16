@@ -20,8 +20,8 @@ tools/check-env.ts   Env var validator — runs at `pnpm dev` startup
 ```
 
 - **Database:** Supabase Postgres via `supabase start` (localhost:54322). No cloud project yet.
-- **Auth:** Supabase Auth JWT validated in FastAPI middleware (`apps/api/src/dailyriff_api/auth.py`). HS256 + `SUPABASE_JWT_SECRET`. `CurrentUser = {id: UUID, email: str|None, role: str|None}`.
-- **Notifications:** 3-channel NotificationService (Realtime + Expo Push + Web Push) in `apps/api/src/dailyriff_api/services/notifications.py`.
+- **Auth:** Supabase Auth JWT validated in FastAPI middleware (`apps/api/src/dailyriff_api/auth.py`). HS256 + ES256/JWKS. `CurrentUser = {id: UUID, email: str|None, role: str|None, impersonation_session_id: UUID|None}`. Impersonation via `X-Impersonation-Session` header (superadmin only, 8h TTL, role=None during impersonation).
+- **Notifications:** 3-channel NotificationService (Realtime + Expo Push + Web Push) + NotificationEventService (15 events, 18 templates, per-category prefs).
 - **Realtime:** Supabase Realtime for presence and DB change events.
 - **Build orchestration:** `pnpm dev` via turbo boots supabase + api + web + codegen watcher in one command.
 
@@ -32,25 +32,41 @@ apps/api/src/dailyriff_api/
   main.py              FastAPI app entrypoint
   auth.py              JWT middleware + CurrentUser dependency
   db.py                asyncpg + Supabase clients
-  routers/             health.py, devices.py, preferences.py
-  services/            notifications.py (3-channel)
-  schemas/             device.py, preferences.py
+  routers/             18 routers (health, devices, preferences, studios, admin, employees,
+                       settings, resources, messaging, notification_templates, waitlist,
+                       invitations, assignments, recordings, payments, teacher_students,
+                       coppa, coppa_deletion, impersonation, lessons, beta,
+                       account_conversion, student_dashboard, parent_dashboard)
+  services/            notifications.py, notification_events.py, invitation_service.py,
+                       coppa_service.py, coppa_deletion_service.py, impersonation_service.py,
+                       recording_service.py, assignment_service.py, lesson_service.py,
+                       attendance_service.py, streak_service.py, account_conversion_service.py,
+                       retention_service.py, r2_client.py, captcha.py, idempotency.py
+  schemas/             device.py, preferences.py, assignment.py, recording.py, payment.py,
+                       invitation.py, waitlist.py, coppa.py, lesson.py, beta.py,
+                       impersonation.py, account_conversion.py, teacher_students.py,
+                       student_dashboard.py, parent_dashboard.py
+  scripts/             seed_polymet.py, seed_edge_cases.py
 
 apps/api/alembic/versions/
-  0001_infra_baseline.py   Infra tables + RLS (user_push_subscriptions, notification_preferences)
+  0001–0021            21 migrations (infra baseline through soft-delete + COPPA deletion)
 
 apps/api/tests/
   conftest.py              make_test_jwt, db fixtures
-  unit/                    test_auth_middleware.py, test_notification_service.py
+  unit/                    524 unit tests across 30+ test files
   integration/             test_devices_endpoints.py, test_preferences_endpoints.py, test_rls_isolation.py
   contract/                test_schemathesis.py
 
-apps/web/src/app/          layout.tsx, page.tsx
-apps/web/src/lib/          env.ts
-apps/web/e2e/              smoke.spec.ts (Playwright static-route smoke)
+apps/web/src/app/
+  (marketing)/         Homepage, about, contact, legal pages (privacy, terms, accessibility)
+  (studio)/            Onboarding, studio-profile, teacher/students, student/*, parent/*
+  (superadmin)/        8-page admin surface (studios, waitlist, verification queue, users)
+apps/web/src/lib/          env.ts, api.ts
+apps/web/e2e/              smoke.spec.ts (Playwright smoke, 12 tests)
 
-apps/mobile/src/stores/    sessionStore.ts (Zustand)
-apps/mobile/src/App.tsx
+apps/mobile/
+  app/                 _layout.tsx + 5 screens (dashboard, assignments, recording, profile, settings)
+  src/stores/          sessionStore.ts (Zustand)
 
 packages/api-client/src/   index.ts, types.gen.ts (auto-generated — never edit manually)
 ```
@@ -100,21 +116,62 @@ packages/api-client/src/   index.ts, types.gen.ts (auto-generated — never edit
 
 ## Key files
 
-- `apps/api/src/dailyriff_api/main.py` — FastAPI app entrypoint
-- `apps/api/src/dailyriff_api/auth.py` — JWT middleware + CurrentUser
+- `apps/api/src/dailyriff_api/main.py` — FastAPI app entrypoint (24 routers registered)
+- `apps/api/src/dailyriff_api/auth.py` — JWT middleware + CurrentUser + impersonation header
+- `apps/api/src/dailyriff_api/pagination.py` — Shared pagination helper (default 100, max 500)
 - `apps/api/src/dailyriff_api/services/notifications.py` — 3-channel NotificationService
-- `apps/api/alembic/versions/` — DB migrations (never skip, never hand-edit prod)
+- `apps/api/src/dailyriff_api/services/coppa_deletion_service.py` — COPPA 15-day grace deletion
+- `apps/api/src/dailyriff_api/services/impersonation_service.py` — Superadmin impersonation sessions
+- `apps/api/src/dailyriff_api/services/r2_client.py` — R2 credential scoping (API vs deletion worker)
+- `apps/api/alembic/versions/` — 21 DB migrations (never skip, never hand-edit prod)
 - `apps/api/openapi.snapshot.json` — OpenAPI snapshot (codegen source of truth)
 - `packages/api-client/src/` — Auto-generated TypeScript client (never edit manually)
 - `tools/check-env.ts` — Env var validator
 - `supabase/config.toml` — Supabase local config
-- `.github/workflows/ci.yaml` — CI pipeline
+- `.github/workflows/ci.yaml` — CI pipeline (4 jobs)
+- `.github/workflows/deploy.yaml` — 2.5-stage deploy pipeline (staging + prod approval)
+- `apps/mobile/eas.json` — EAS build profiles (development, preview, production)
+- `Makefile` — Seed targets (`make seed-polymet`, `make seed-edge-cases`)
 - `ralph/prompt.md` — Ralph's TDD instructions per iteration
 - `ralph/review-prompt.md` — Ralph's per-iteration code review gate
 - `docs/prds/stage-0-foundation.md` — Stage 0 Foundation PRD
 - `docs/prds/stage-1-foundation.md` — Stage 1 Foundation PRD (MVP)
 - `docs/prds/stage-1-deferred-features.md` — Stage 1 scope tracker (Q1–Q29 grill-me output)
 - `docs/DESIGN.md` — Design system (typography, colors, spacing, motion, voice)
+
+## Deploy pipeline
+
+`.github/workflows/deploy.yaml` — 2.5-stage pipeline triggered on merge to master:
+
+| Stage | Environment | Gate | What it does |
+|---|---|---|---|
+| 1 | `staging` | Auto (on merge) | Runs `alembic upgrade head` against staging Supabase |
+| 2 | `production` | Manual approval | Runs `alembic upgrade head` against production Supabase |
+
+**Routing rules:**
+
+| Change type | Path |
+|---|---|
+| Frontend-only | PR preview (Vercel) → merge → Vercel prod auto-deploy |
+| API logic (no schema) | PR preview → merge → Vercel prod |
+| Alembic migrations | Merge → staging DB → approval → prod DB |
+| Stripe/COPPA flows | Merge → staging (test keys) → approval → prod (live keys) |
+| Env config changes | Staging → approval → prod |
+
+**GitHub Environment secrets required:**
+- `staging`: `STAGING_DATABASE_URL`
+- `production`: `PRODUCTION_DATABASE_URL` (requires reviewer approval)
+
+**Vercel setup (manual):**
+- Connect `slubby101/DailyRiffV2` to Vercel, root directory `apps/web`, framework preset Next.js
+- Per-environment vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_PROJECT_REF`, `NEXT_PUBLIC_API_URL`, `ENVIRONMENT`
+
+**Expo EAS build profiles** (`apps/mobile/eas.json`):
+- `development`: local Supabase, dev client
+- `preview`: staging Supabase, internal distribution
+- `production`: prod Supabase, auto-increment version
+
+Health checks: `GET /api/health` (web) + `GET /health` (API).
 
 ## Design System
 
